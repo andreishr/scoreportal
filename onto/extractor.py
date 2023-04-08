@@ -26,29 +26,40 @@ for file_name in os.listdir(dir_path)[:4]:
 
         '''
         Get all parts in the score
+            use score.parts
+            Another way:
             recurse() - iterating over the elements of a music score
             getElementsByClass('Instruments') - get all instruments/parts
-            Another way is to use score.parts
+            
         '''
-        Instruments = score.recurse().getElementsByClass('Instrument')
-        cprint('\n The score includes the following elements:', 'blue', attrs=["bold"])
-        instrument_list = [f"{oneInstrument}" for oneInstrument in Instruments]
+        Parts = score.parts
+        cprint('\n The score includes the following parts:', 'blue', attrs=["bold"])
+        part_list = [f"{onePart}" for onePart in Parts]
         # PRint the list of instruments(parts)
-        print(f"{instrument_list}\n")
+        print(f"{part_list}\n")
 
 
         '''
-        Get clefs for all parts
-
+        Get details for all parts:
+            quarterLength - gets the part length in quarter length units
+            getTimeSignatures()[0] - used to get the time signature of the part
+            getInstruments()[0] - used to get the instrument of the part
+            getElementsByClass('Measure')[0].getElementsByClass('Clef')[0] - used to het the clef of the part
         '''
-        cprint('\n Clefs of each score part:', 'blue', attrs=["bold"])
-        for i, thisInstrument in enumerate(instrument_list):
+        cprint('\n Details of each score part:', 'green', attrs=["bold"])
+        for i, thisPart in enumerate(part_list):
+            cprint(f'\n{thisPart} has the following details:', 'blue', attrs=['bold'])
             part = score.parts[i]
+            partLength = part.quarterLength
             partSignature = part.getTimeSignatures()[0]
+            partInstrument = part.getInstruments()[0]
             partClef = part.getElementsByClass('Measure')[0].getElementsByClass('Clef')[0]
             stringClef = str(partClef).split(".")[-1]
-            print(f"{thisInstrument} part has clef: {stringClef[:-1]}")
-            print(f"{thisInstrument} part has timse signature: {partSignature}")
+            stringTimeSign = str(partSignature).split(".")[-1]
+            print(f"Has length: {partLength} quarter-length units")
+            print(f"Has clef: {stringClef[:-1]}")
+            print(f"Has time signature: {stringTimeSign[:-1]}")
+            print(f"Has instrument: {partInstrument}")
         print('\n')
 
 
@@ -61,9 +72,9 @@ for file_name in os.listdir(dir_path)[:4]:
 
         In addition: Build a dictionary containing parts and keys
         '''
-        instruments_notes = {}
-        for i, thisInstrument in enumerate(instrument_list):
-            cprint(f"Notes for {thisInstrument} are:", 'yellow', attrs=['bold'])
+        part_notes = {}
+        for i, thisPart in enumerate(part_list):
+            cprint(f"Notes for {thisPart} are:", 'yellow', attrs=['bold'])
             part = score.parts[i]
             part = part.stripTies()
             notes = part.recurse().notes
@@ -72,12 +83,44 @@ for file_name in os.listdir(dir_path)[:4]:
                 note_list.append(thisNote)
                 print(colored(f"Note pitch: {thisNote.pitch}", attrs=['bold']), colored(f"Note offset: {thisNote.offset}", attrs=['bold']))
             print('\n')
-            instruments_notes[thisInstrument] = note_list
-
+            part_notes[thisPart] = note_list
         # Print Dictionary:
         cprint('\n Dictionary with each part and notes:', 'blue', attrs=["bold"])
-        print(instruments_notes)
+        print(f"{part_notes}\n")
 
+
+        '''
+        Get intervals on each part:
+            interval.Interval() returns the interval between consecutive notes
+        '''
+        part_intervals = {}
+        for part_note in part_notes:
+            intervals = []
+            stringPart = str(part_note).split(".")[-1]
+            cprint(f"Intervals for {stringPart[:-1]} are:", 'yellow', attrs=['bold'])
+            for i in range(len(part_notes[part_note])-1):
+                oneinterval = interval.Interval(part_notes[part_note][i], part_notes[part_note][i+1])
+                intervals.append(oneinterval)
+            for thisInterval in intervals:
+                print(colored(f"Interval name: {thisInterval.directedNiceName}", attrs=['bold']))
+            print('\n')
+            part_intervals[part_note] = intervals
+        # Print Dictionary:
+        cprint('\n Dictionary with each interval for a part:', 'blue', attrs=["bold"])
+        print(part_intervals)
+
+        '''
+        Get chords for a specific part
+            TODO Finish
+        '''
+        for i, thisPart in enumerate(part_list):
+            part = score.parts[i]
+            measures = part.getElementsByClass('Measure')
+            # Get the chord for the current voice
+            chords = measures.chordify()
+            # Print the pitches in the chord
+            for oneChord in chords[:10]:
+                print(oneChord.pitches)
 
     print('\n')
 
