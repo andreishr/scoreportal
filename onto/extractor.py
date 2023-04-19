@@ -6,12 +6,13 @@ from termcolor import colored, cprint
 load_dotenv()
 dir_path = os.getenv('SONG_PATH')
 # Loop through each file in the directory [:1] only for testing things
-for file_name in os.listdir(dir_path)[:4]:
+for file_name in os.listdir(dir_path)[:1]:
     if file_name.endswith('.mxl'):
         # Parse the mxl file
         filepath = os.path.join(dir_path, file_name)
         score = converter.parse(filepath)
-        
+        schord = score.chordify()
+        schord.show()
 
         '''
         Get all metadata available in the mxl file
@@ -109,19 +110,32 @@ for file_name in os.listdir(dir_path)[:4]:
         cprint('\n Dictionary with each interval for a part:', 'blue', attrs=["bold"])
         print(part_intervals)
 
+
         '''
         Get chords for a specific part
-            TODO Finish
+            *schord represents the original score chordified at the beginning with .cordify() method
+            Chords are extracted for each measure of the score; we get measure with getElementsByClass('Measures')
+        .notes used for measure object gives the elements in the measures that contain notes (ex. chords)
+        .elements used for measure object returns all elements in the specific measure
+        For each measure we use .notes to get all the chords, and then we use .commonName and .pitches attributes
+        in order to extract the name and pitch objects.
         '''
-        for i, thisPart in enumerate(part_list):
-            part = score.parts[i]
-            measures = part.getElementsByClass('Measure')
-            # Get the chord for the current voice
-            chords = measures.chordify()
-            # Print the pitches in the chord
-            for oneChord in chords[:10]:
-                print(oneChord.pitches)
-
+        cprint('\n Chordified score has following chords at each measure:', 'green', attrs=["bold"])
+        schord.stripTies()
+        measures = schord.getElementsByClass('Measure')
+        chord_dict = {}
+        for measure in measures[:10]:
+            chord_list = []
+            print(colored('At measure number: ', attrs=['bold']) + str(measure.number))
+            for oneChord in measure.notes:
+                chord_list.append(oneChord.commonName)
+                chord_list.append(oneChord.pitches)
+                print(colored('Chord: ', attrs=['bold']) + colored(oneChord.commonName, 'light_cyan') + 
+                      colored(' having the notes: ', attrs=['bold']) + str([onePitch.name for onePitch in oneChord.pitches]))
+            chord_dict[measure] = [(chord_list[i], chord_list[i+1]) for i in range(0, len(chord_list), 2)]
+            print('\n')
+        cprint('Dictionary with chords:', 'blue', attrs=["bold"])
+        print(chord_dict)
     print('\n')
 
 
