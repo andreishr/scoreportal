@@ -12,7 +12,7 @@ for file_name in os.listdir(dir_path)[:1]:
         filepath = os.path.join(dir_path, file_name)
         score = converter.parse(filepath)
         schord = score.chordify()
-        schord.show()
+
 
         '''
         Get all metadata available in the mxl file
