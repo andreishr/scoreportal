@@ -6,13 +6,12 @@ from termcolor import colored, cprint
 load_dotenv()
 dir_path = os.getenv('SONG_PATH')
 # Loop through each file in the directory [:1] only for testing things
-for file_name in os.listdir(dir_path)[:1]:
+for file_name in os.listdir(dir_path)[:2]:
     if file_name.endswith('.mxl'):
         # Parse the mxl file
         filepath = os.path.join(dir_path, file_name)
         score = converter.parse(filepath)
         schord = score.chordify()
-
 
         '''
         Get all metadata available in the mxl file
@@ -57,6 +56,10 @@ for file_name in os.listdir(dir_path)[:1]:
             partClef = part.getElementsByClass('Measure')[0].getElementsByClass('Clef')[0]
             stringClef = str(partClef).split(".")[-1]
             stringTimeSign = str(partSignature).split(".")[-1]
+            notes = part.flat.notes
+            partKey = notes.analyze('key')
+            scale_name = partKey.getScale().name
+            print("Part scale: " + scale_name)
             print(f"Has length: {partLength} quarter-length units")
             print(f"Has clef: {stringClef[:-1]}")
             print(f"Has time signature: {stringTimeSign[:-1]}")
@@ -80,9 +83,9 @@ for file_name in os.listdir(dir_path)[:1]:
             part = part.stripTies()
             notes = part.recurse().notes
             note_list = []
-            for thisNote in notes[:10]:
+            for thisNote in notes[:5]:
                 note_list.append(thisNote)
-                print(colored(f"Note pitch: {thisNote.pitch}", attrs=['bold']), colored(f"Note offset: {thisNote.offset}", attrs=['bold']))
+                print(colored(f"Note pitch: {thisNote.pitch.accidental}", attrs=['bold']), colored(f"Note offset: {thisNote.offset}", attrs=['bold']))
             print('\n')
             part_notes[thisPart] = note_list
         # Print Dictionary:
@@ -124,7 +127,7 @@ for file_name in os.listdir(dir_path)[:1]:
         schord.stripTies()
         measures = schord.getElementsByClass('Measure')
         chord_dict = {}
-        for measure in measures[:10]:
+        for measure in measures[:5]:
             chord_list = []
             print(colored('At measure number: ', attrs=['bold']) + str(measure.number))
             for oneChord in measure.notes:
