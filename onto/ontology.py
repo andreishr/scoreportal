@@ -43,7 +43,7 @@ g.add((omo.Song, RDF.type, OWL.Class))
 g.add((omo.Song, RDFS.label, Literal("Song")))
 g.add((omo.Song, RDFS.comment, Literal("Has properties: Composer, Title. A song can contain Parts")))
 '''
-Song properties
+Song properties:
 '''
 # Composer:
 g.add((omo.SongComposer, RDF.type, OWL.DatatypeProperty))
@@ -120,7 +120,7 @@ g.add((omo.PitchAccidental, RDFS.domain, omo.Pitch))
 
 # Add MusicGenre class:
 g.add((omo.MusicGenre, RDF.type, OWL.Class))
-g.add((omo.MusicGenre, RDFS.label, Literal("Pitch")))
+g.add((omo.MusicGenre, RDFS.label, Literal("Genre")))
 g.add((omo.MusicGenre, RDFS.comment, Literal("Has properties: GenreType. Has subclasses: MusicStyles")))
 '''
 Genre properties
@@ -167,7 +167,9 @@ g.add((omo.MyNote, omo.NoteDuration, Literal("2")))
 g.add((omo.MyPitch, RDF.type, omo.Pitch))
 g.add((omo.MyPitch, omo.PitchOctave, Literal("4")))
 g.add((omo.MyPitch, omo.PitchAccidental, Literal("None")))
-
+# Genre
+g.add((omo.ClassicGenre, RDF.type, omo.MusicGenre))
+g.add((omo.ClassicGenre, omo.GenreType, Literal("Classic")))
 
 # Link the MySong instance and major_third instance
 g.add((omo.MyNote, omo.hasPitch, omo.MyPitch))
