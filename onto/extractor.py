@@ -5,8 +5,13 @@ from termcolor import colored, cprint
 # Load environment variable
 load_dotenv()
 dir_path = os.getenv('SONG_PATH')
+# Declare dictionaries to be used for classes:
+song_dict = {}
 # Loop through each file in the directory [:1] only for testing things
-for file_name in os.listdir(dir_path)[:2]:
+for file_name in os.listdir(dir_path):
+    songAttr_dict = {}
+    parts_dict = {}
+    print(file_name)
     if file_name.endswith('.mxl'):
         # Parse the mxl file
         filepath = os.path.join(dir_path, file_name)
@@ -19,10 +24,22 @@ for file_name in os.listdir(dir_path)[:2]:
             Get key-value pairs from metadata inside loop
         '''
         cprint('The score contains the following data:', 'green', attrs=["bold"])
-        meta = score.metadata.all()
-        for keyy, value in meta:
-            print(colored(keyy, 'cyan', attrs=["bold"]), ":", value)
+        meta = score.metadata
+        meta_all = score.metadata.all()
 
+        key_list = [elem[0] for elem in meta_all]
+        if 'composer' in key_list:
+            composer = meta.composer
+        else:
+            composer = 'Unknown'
+        if 'title' in key_list:
+            title = meta.title
+        else:
+            title = meta.movementName.split('.')[0]
+        
+        songAttr_dict['songDescription'] = [title, composer]
+        print(colored(f'Title: {title}', 'cyan', attrs=["bold"]))
+        print(colored(f'Composer: {composer}', 'cyan', attrs=["bold"]))
 
         '''
         Get all parts in the score
@@ -35,7 +52,7 @@ for file_name in os.listdir(dir_path)[:2]:
         Parts = score.parts
         cprint('\n The score includes the following parts:', 'blue', attrs=["bold"])
         part_list = [f"{onePart}" for onePart in Parts]
-        # PRint the list of instruments(parts)
+        # Print the list of instruments(parts)
         print(f"{part_list}\n")
 
 
@@ -46,73 +63,61 @@ for file_name in os.listdir(dir_path)[:2]:
             getInstruments()[0] - used to get the instrument of the part
             getElementsByClass('Measure')[0].getElementsByClass('Clef')[0] - used to het the clef of the part
         '''
-        cprint('\n Details of each score part:', 'green', attrs=["bold"])
-        for i, thisPart in enumerate(part_list):
-            cprint(f'\n{thisPart} has the following details:', 'blue', attrs=['bold'])
-            part = score.parts[i]
-            partLength = part.quarterLength
-            partSignature = part.getTimeSignatures()[0]
-            partInstrument = part.getInstruments()[0]
-            partClef = part.getElementsByClass('Measure')[0].getElementsByClass('Clef')[0]
-            stringClef = str(partClef).split(".")[-1]
-            stringTimeSign = str(partSignature).split(".")[-1]
-            notes = part.flat.notes
-            partKey = notes.analyze('key')
-            scale_name = partKey.getScale().name
-            print("Part scale: " + scale_name)
-            print(f"Has length: {partLength} quarter-length units")
-            print(f"Has clef: {stringClef[:-1]}")
-            print(f"Has time signature: {stringTimeSign[:-1]}")
-            print(f"Has instrument: {partInstrument}")
-        print('\n')
-
-
         '''
         Get all notes for an instrument(part)
             for each instrument get that specific part
             stripTies() is used to get the notes correctly
             get all the notes with recurse()
             for each note, any note attribute can be saved
-
-        In addition: Build a dictionary containing parts and keys
         '''
-        part_notes = {}
-        for i, thisPart in enumerate(part_list):
-            cprint(f"Notes for {thisPart} are:", 'yellow', attrs=['bold'])
-            part = score.parts[i]
-            part = part.stripTies()
-            notes = part.recurse().notes
-            note_list = []
-            for thisNote in notes[:5]:
-                note_list.append(thisNote)
-                print(colored(f"Note pitch: {thisNote.pitch.accidental}", attrs=['bold']), colored(f"Note offset: {thisNote.offset}", attrs=['bold']))
-            print('\n')
-            part_notes[thisPart] = note_list
-        # Print Dictionary:
-        cprint('\n Dictionary with each part and notes:', 'blue', attrs=["bold"])
-        print(f"{part_notes}\n")
-
-
         '''
         Get intervals on each part:
             interval.Interval() returns the interval between consecutive notes
         '''
-        part_intervals = {}
-        for part_note in part_notes:
-            intervals = []
-            stringPart = str(part_note).split(".")[-1]
-            cprint(f"Intervals for {stringPart[:-1]} are:", 'yellow', attrs=['bold'])
-            for i in range(len(part_notes[part_note])-1):
-                oneinterval = interval.Interval(part_notes[part_note][i], part_notes[part_note][i+1])
-                intervals.append(oneinterval)
-            for thisInterval in intervals:
-                print(colored(f"Interval name: {thisInterval.directedNiceName}", attrs=['bold']))
-            print('\n')
-            part_intervals[part_note] = intervals
-        # Print Dictionary:
-        cprint('\n Dictionary with each interval for a part:', 'blue', attrs=["bold"])
-        print(part_intervals)
+        cprint('\n Details of each score part:', 'green', attrs=["bold"])
+        for i, thisPart in enumerate(part_list):
+            cprint(f'\n{thisPart} has the following details:', 'blue', attrs=['bold'])
+            part = score.parts[i]
+            partLength = part.quarterLength
+            partSignature = part.getTimeSignatures()[0]
+            partInstrument = str(part.getInstruments()[0]).split(':')[-1]
+            partClef = part.getElementsByClass('Measure')[0].getElementsByClass('Clef')[0]
+            stringClef = str(partClef).split(".")[-1]
+            stringTimeSign = str(partSignature).split(".")[-1]
+            if part.getElementsByClass('Measure')[0].getElementsByClass(key.Key): 
+                scale_name = part.getElementsByClass('Measure')[0].getElementsByClass(key.Key)[0] 
+            else:
+                scale_name = "Undefined"         
+            part = part.stripTies()
+            notes = part.recurse().notes
+            note_list = []
+            for thisNote in notes:
+                if thisNote.isChord:
+                    for oneNote in thisNote.notes:
+                        note_list.append(oneNote)
+                else:    
+                    note_list.append(thisNote)  
+            interval_list = []
+            j = 0
+            for i in range(len(note_list)-1):
+                oneinterval = interval.Interval(note_list[i], note_list[i+1])
+                if oneinterval.isConsonant():
+                    interval_list.append([oneinterval, "Consonant"])
+                else:
+                    interval_list.append([oneinterval, "Dissonant"])
+            # for thisInterval in interval_list:
+            #     print(colored(f"Interval name: {thisInterval[0].directedNiceName} between {thisInterval[1]} and {thisInterval[2]}", attrs=['bold']))
+            parts_dict[str(thisPart).split('.')[2][:-1]] = [str(scale_name), partLength, stringClef[:-1], stringTimeSign[:-1], partInstrument, note_list, interval_list]
+            print("Part scale: " + str(scale_name))
+            print(f"Has length: {partLength} quarter-length units")
+            print(f"Has clef: {stringClef[:-1]}")
+            print(f"Has time signature: {stringTimeSign[:-1]}")
+            print(f"Has instrument: {partInstrument}")
+        print('\n')
+        songAttr_dict['Parts'] = parts_dict
+        song_dict[str(file_name).split('.')[0]] = songAttr_dict
 
+        
 
         '''
         Get chords for a specific part
@@ -123,23 +128,23 @@ for file_name in os.listdir(dir_path)[:2]:
         For each measure we use .notes to get all the chords, and then we use .commonName and .pitches attributes
         in order to extract the name and pitch objects.
         '''
-        cprint('\n Chordified score has following chords at each measure:', 'green', attrs=["bold"])
-        schord.stripTies()
-        measures = schord.getElementsByClass('Measure')
-        chord_dict = {}
-        for measure in measures[:5]:
-            chord_list = []
-            print(colored('At measure number: ', attrs=['bold']) + str(measure.number))
-            for oneChord in measure.notes:
-                chord_list.append(oneChord.commonName)
-                chord_list.append(oneChord.pitches)
-                print(colored('Chord: ', attrs=['bold']) + colored(oneChord.commonName, 'light_cyan') + 
-                      colored(' having the notes: ', attrs=['bold']) + str([onePitch.name for onePitch in oneChord.pitches]))
-            chord_dict[measure] = [(chord_list[i], chord_list[i+1]) for i in range(0, len(chord_list), 2)]
-            print('\n')
-        cprint('Dictionary with chords:', 'blue', attrs=["bold"])
-        print(chord_dict)
-    print('\n')
+    #     cprint('\n Chordified score has following chords at each measure:', 'green', attrs=["bold"])
+    #     schord.stripTies()
+    #     measures = schord.getElementsByClass('Measure')
+    #     chord_dict = {}
+    #     for measure in measures[:5]:
+    #         chord_list = []
+    #         print(colored('At measure number: ', attrs=['bold']) + str(measure.number))
+    #         for oneChord in measure.notes:
+    #             chord_list.append(oneChord.commonName)
+    #             chord_list.append(oneChord.pitches)
+    #             print(colored('Chord: ', attrs=['bold']) + colored(oneChord.commonName, 'light_cyan') + 
+    #                   colored(' having the notes: ', attrs=['bold']) + str([onePitch for onePitch in oneChord.pitches]))
+    #         chord_dict[measure] = [(chord_list[i], chord_list[i+1]) for i in range(0, len(chord_list), 2)]
+    #         print('\n')
+    #     cprint('Dictionary with chords:', 'blue', attrs=["bold"])
+    #     print(chord_dict)
+    # print('\n')
 
 
     
