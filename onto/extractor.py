@@ -8,9 +8,10 @@ dir_path = os.getenv('SONG_PATH')
 # Declare dictionaries to be used for classes:
 song_dict = {}
 # Loop through each file in the directory [:1] only for testing things
-for file_name in os.listdir(dir_path):
+for file_name in os.listdir(dir_path)[:2]:
     songAttr_dict = {}
     parts_dict = {}
+    measures_dict = {}
     print(file_name)
     if file_name.endswith('.mxl'):
         # Parse the mxl file
@@ -129,10 +130,35 @@ for file_name in os.listdir(dir_path):
         in order to extract the name and pitch objects.
         '''
     #     cprint('\n Chordified score has following chords at each measure:', 'green', attrs=["bold"])
-    #     schord.stripTies()
-    #     measures = schord.getElementsByClass('Measure')
-    #     chord_dict = {}
-    #     for measure in measures[:5]:
+        measures = schord.getElementsByClass('Measure')
+        for measure in measures[:5]:
+            chord_nr = 0
+            chord_dict = {} 
+            print(colored('Measure number: ', 'blue', attrs = ["bold"]) + str(measure.measureNumber) + colored(' Measure duration: ', 'blue', attrs=["bold"]) + str(measure.barDuration))
+            cprint('Has chords:', 'green', attrs=['bold'])
+            for elem in measure.secondsMap:
+                note_list = []
+                thisChord = elem['element']
+                chordName = None
+                chordStart = None
+                chordDuration = None
+                chordEnd = None
+                if isinstance(thisChord, chord.Chord):
+                    chordName = thisChord.commonName
+                    chordStart = elem['offsetSeconds']
+                    chordDuration = elem['durationSeconds']
+                    chordEnd = elem['endTimeSeconds']
+                    chordNotes = thisChord.notes
+                    chordPitches = thisChord.pitches
+                    cprint(f'Name: {chordName}, Duration (in seconds): {chordDuration}, with notes:', attrs=['bold'])
+                    print(chordNotes)
+                    cprint(f'And pitches:', attrs=['bold'])
+                    print(chordPitches)
+                    
+                    chord_dict[chord_nr] = [chordName, chordDuration]
+                    chord_nr += 1
+            measures_dict["M"+str(measure.measureNumber)]=[measure.measureNumber, measure.barDuration, chord_dict]
+        print(measures_dict)
     #         chord_list = []
     #         print(colored('At measure number: ', attrs=['bold']) + str(measure.number))
     #         for oneChord in measure.notes:
