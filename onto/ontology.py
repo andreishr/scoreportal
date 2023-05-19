@@ -111,18 +111,51 @@ g.add((omo.PartInstrument, RDFS.comment, Literal("Voice can be also considered i
 g.add((omo.PartInstrument, RDFS.range, RDFS.Literal))
 g.add((omo.PartInstrument, RDFS.domain, omo.Part))
 
-# # Add chord class:
-# g.add((omo.Chord, RDF.type, OWL.Class))
-# g.add((omo.Chord, RDFS.label, Literal("Chord Class")))
-# g.add((omo.Chord, RDFS.comment, Literal("Has properties: ChordName.")))
-# '''
-# Chord properties
-# '''
-# # Name:
-# g.add((omo.ChordName, RDF.type, OWL.DatatypeProperty))
-# g.add((omo.ChordName, RDFS.label, Literal("Chord Name")))
-# g.add((omo.ChordName, RDFS.range, RDFS.Literal))
-# g.add((omo.ChordName, RDFS.domain, omo.Chord))
+# Add measure class:
+g.add((omo.Measure, RDF.type, OWL.Class))
+g.add((omo.Measure, RDFS.label, Literal("Measure Class")))
+g.add((omo.Measure, RDFS.comment, Literal("Has properties: MeasureNumber, MeasureDuration. Measure is available for chordified score, not for each part.")))
+'''
+Measure properties:
+'''
+# Measure number
+g.add((omo.MeasureNumber, RDF.type, OWL.DatatypeProperty))
+g.add((omo.MeasureNumber, RDFS.label, Literal("Measure Number")))
+g.add((omo.MeasureNumber, RDFS.range, RDFS.Literal))
+g.add((omo.MeasureNumber, RDFS.domain, omo.Measure))
+# Measure duration
+g.add((omo.MeasureDuration, RDF.type, OWL.DatatypeProperty))
+g.add((omo.MeasureDuration, RDFS.label, Literal("Measure Duration")))
+g.add((omo.MeasureDuration, RDFS.range, RDFS.Literal))
+g.add((omo.MeasureDuration, RDFS.domain, omo.Measure))
+
+# Add chord class:
+g.add((omo.Chord, RDF.type, OWL.Class))
+g.add((omo.Chord, RDFS.label, Literal("Chord Class")))
+g.add((omo.Chord, RDFS.comment, Literal("Has properties: ChordName, ChordDuration (in seconds), NoteList, ChordList")))
+'''
+Chord properties
+'''
+# ChordName:
+g.add((omo.ChordName, RDF.type, OWL.DatatypeProperty))
+g.add((omo.ChordName, RDFS.label, Literal("Chord Name")))
+g.add((omo.ChordName, RDFS.range, RDFS.Literal))
+g.add((omo.ChordName, RDFS.domain, omo.Chord))
+# ChordDuration:
+g.add((omo.ChordDuration, RDF.type, OWL.DatatypeProperty))
+g.add((omo.ChordDuration, RDFS.label, Literal("Chord Duration (in seocnds)")))
+g.add((omo.ChordDuration, RDFS.range, RDFS.Literal))
+g.add((omo.ChordDuration, RDFS.domain, omo.Chord))
+# NoteList:
+g.add((omo.ChordNotes, RDF.type, OWL.DatatypeProperty))
+g.add((omo.ChordNotes, RDFS.label, Literal("Chord Notes")))
+g.add((omo.ChordNotes, RDFS.range, RDFS.Literal))
+g.add((omo.ChordNotes, RDFS.domain, omo.Chord))
+# PitchList:
+g.add((omo.ChordPitches, RDF.type, OWL.DatatypeProperty))
+g.add((omo.ChordPitches, RDFS.label, Literal("Chord Notes")))
+g.add((omo.ChordPitches, RDFS.range, RDFS.Literal))
+g.add((omo.ChordPitches, RDFS.domain, omo.Chord))
 
 # Add note class:
 g.add((omo.Note, RDF.type, OWL.Class))
@@ -149,7 +182,7 @@ g.add((omo.Pitch, RDFS.comment, Literal("Has properties:Name, Octave, Accidental
 '''
 Pitch properties
 '''
-# NameL
+# Name:
 g.add((omo.PitchName, RDF.type, OWL.DatatypeProperty))
 g.add((omo.PitchName, RDFS.label, Literal("Pitch Name")))
 g.add((omo.PitchName, RDFS.range, RDFS.Literal))
@@ -225,8 +258,30 @@ g.add((omo.hasInterval, RDFS.label, Literal("hasInterval")))
 g.add((omo.hasInterval, RDFS.comment, Literal("Relates parts to intervals")))
 g.add((omo.hasInterval, RDFS.domain, omo.Part))
 g.add((omo.hasInterval, RDFS.range, omo.MusicInterval))
-
-
+# Define containsNote object property
+g.add((omo.containsNote, RDF.type, OWL.ObjectProperty))
+g.add((omo.containsNote, RDFS.label, Literal("containsNote")))
+g.add((omo.containsNote, RDFS.comment, Literal("Relates chords to notes")))
+g.add((omo.containsNote, RDFS.domain, omo.Chord))
+g.add((omo.containsNote, RDFS.range, omo.Note))
+# Define containsPitch object property
+g.add((omo.containsPitch, RDF.type, OWL.ObjectProperty))
+g.add((omo.containsPitch, RDFS.label, Literal("containsPitch")))
+g.add((omo.containsPitch, RDFS.comment, Literal("Relates chords to pitches")))
+g.add((omo.containsPitch, RDFS.domain, omo.Chord))
+g.add((omo.containsPitch, RDFS.range, omo.Pitch))
+# Define hasMeasure object property
+g.add((omo.hasMeasure, RDF.type, OWL.ObjectProperty))
+g.add((omo.hasMeasure, RDFS.label, Literal("hasMeasure")))
+g.add((omo.hasMeasure, RDFS.comment, Literal("Relates songs to measures")))
+g.add((omo.hasMeasure, RDFS.domain, omo.Part))
+g.add((omo.hasMeasure, RDFS.range, omo.Measure))
+# Define hasChord object property
+g.add((omo.hasChord, RDF.type, OWL.ObjectProperty))
+g.add((omo.hasChord, RDFS.label, Literal("hasChord")))
+g.add((omo.hasChord, RDFS.comment, Literal("Relates measures to chords")))
+g.add((omo.hasChord, RDFS.domain, omo.Measure))
+g.add((omo.hasChord, RDFS.range, omo.Chord))
 
 
 
@@ -234,13 +289,15 @@ g.add((omo.hasInterval, RDFS.range, omo.MusicInterval))
 Add instances
 '''
 # Song instance
+i = 0
 for song in song_dict:
     currentSong = song_dict[song]['songDescription']
-    song_uri = omo + song
+    song_uri = omo + "ID_" + str(i) + "/" + song
     g.add((URIRef(song_uri), RDF.type, omo.Song))
-    g.add((URIRef(song_uri), omo.SongComposer, Literal(f"Composer: {currentSong[1]}"))) 
-    g.add((URIRef(song_uri), omo.SongTitle, Literal(f"Title: {currentSong[0]}")))
+    g.add((URIRef(song_uri), omo.SongComposer, Literal(f"{currentSong[1]}"))) 
+    g.add((URIRef(song_uri), omo.SongTitle, Literal(f"{currentSong[0]}")))
     parts = song_dict[song]['Parts']
+    measures = song_dict[song]['Measures']
     for part in parts:
         part_uri = song_uri + "/Part/" + part.replace(" ", "_")
         scale = parts[part][0]
@@ -282,6 +339,41 @@ for song in song_dict:
             g.add((URIRef(interval_uri), omo.IntervalStart, Literal(f"{interval[0].pitchStart}")))
             g.add((URIRef(interval_uri), omo.IntervalEnd, Literal(f"{interval[0].pitchEnd}")))
             g.add((URIRef(part_uri), omo.hasInterval, URIRef(interval_uri)))
+
+    for measure in measures:
+        measure_uri = song_uri + measure
+        measure_number = measures[measure][0]
+        measure_duration =  measures[measure][1]
+        measure_chords =  measures[measure][2]
+        g.add((URIRef(measure_uri), RDF.type, omo.Measure))
+        g.add((URIRef(measure_uri), omo.MeasureNumber, Literal(f"{measure_number}")))
+        g.add((URIRef(measure_uri), omo.MeasureDuration, Literal(f"{measure_duration}")))
+        g.add((URIRef(song_uri), omo.hasMeasure, URIRef(measure_uri)))
+        for chord in measure_chords:
+            chord_name = measure_chords[chord][0]
+            chord_duration = measure_chords[chord][1]
+            chord_notes = measure_chords[chord][2]
+            # chord_uri = measure_uri + "/" + str(chord) + "/" + str(chord_name).replace(" ", "_")
+            chord_uri = omo + str(chord_name).replace(" ", "_") + str([note.name[0] 
+                                                                       + str(note.duration).split(".")[2].replace(" ", "_").replace(".", "").replace(">", "") 
+                                                                       + str(note.pitch).replace("#", "Sharp").replace("-", "Flat") for note in chord_notes]).replace("[", "").replace("]", "").replace(",", "/").replace(" ", "").replace("'", "")
+            g.add((URIRef(chord_uri), RDF.type, omo.Chord))
+            g.add((URIRef(chord_uri), omo.ChordName, Literal(f"{chord_name}")))
+            g.add((URIRef(chord_uri), omo.ChordDuration, Literal(f"{chord_duration}")))
+            chord_noteList = []
+            chord_pitchList = []
+            for note in chord_notes:
+                note_uri = omo + "Note/" + note.name[0] + "/Dur/" + str(note.duration).split(".")[2].replace(" ", "_").replace(".", "").replace(">", "")
+                pitch_uri = note_uri + "/Pitch" + str(note.pitch).replace("#", "Sharp").replace("-", "Flat")
+                g.add((URIRef(chord_uri), omo.containsNote, URIRef(note_uri)))
+                g.add((URIRef(chord_uri), omo.containsPitch, URIRef(pitch_uri)))
+                chord_noteList.append(note.name[0])
+                chord_pitchList.append(note.pitch.name + str(note.pitch.octave))
+            g.add((URIRef(chord_uri), omo.ChordNotes, Literal(f"{chord_noteList}")))
+            g.add((URIRef(chord_uri), omo.ChordPitches, Literal(f"{chord_pitchList}")))
+            g.add((URIRef(measure_uri), omo.hasChord, URIRef(chord_uri)))
+
+    i += 1
 
 
 # Genre

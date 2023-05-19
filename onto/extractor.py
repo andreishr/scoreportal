@@ -8,7 +8,7 @@ dir_path = os.getenv('SONG_PATH')
 # Declare dictionaries to be used for classes:
 song_dict = {}
 # Loop through each file in the directory [:1] only for testing things
-for file_name in os.listdir(dir_path)[:2]:
+for file_name in os.listdir(dir_path):
     songAttr_dict = {}
     parts_dict = {}
     measures_dict = {}
@@ -116,7 +116,7 @@ for file_name in os.listdir(dir_path)[:2]:
             print(f"Has instrument: {partInstrument}")
         print('\n')
         songAttr_dict['Parts'] = parts_dict
-        song_dict[str(file_name).split('.')[0]] = songAttr_dict
+        
 
         
 
@@ -131,7 +131,7 @@ for file_name in os.listdir(dir_path)[:2]:
         '''
     #     cprint('\n Chordified score has following chords at each measure:', 'green', attrs=["bold"])
         measures = schord.getElementsByClass('Measure')
-        for measure in measures[:5]:
+        for measure in measures:
             chord_nr = 0
             chord_dict = {} 
             print(colored('Measure number: ', 'blue', attrs = ["bold"]) + str(measure.measureNumber) + colored(' Measure duration: ', 'blue', attrs=["bold"]) + str(measure.barDuration))
@@ -154,11 +154,13 @@ for file_name in os.listdir(dir_path)[:2]:
                     print(chordNotes)
                     cprint(f'And pitches:', attrs=['bold'])
                     print(chordPitches)
-                    
-                    chord_dict[chord_nr] = [chordName, chordDuration]
+                    chord_dict[chord_nr] = [chordName, chordDuration, chordNotes]
                     chord_nr += 1
             measures_dict["M"+str(measure.measureNumber)]=[measure.measureNumber, measure.barDuration, chord_dict]
-        print(measures_dict)
+        songAttr_dict['Measures'] = measures_dict
+        song_dict[str(file_name).split('.')[0]] = songAttr_dict
+
+            
     #         chord_list = []
     #         print(colored('At measure number: ', attrs=['bold']) + str(measure.number))
     #         for oneChord in measure.notes:
