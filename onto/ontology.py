@@ -353,7 +353,6 @@ for song in song_dict:
             chord_name = measure_chords[chord][0]
             chord_duration = measure_chords[chord][1]
             chord_notes = measure_chords[chord][2]
-            # chord_uri = measure_uri + "/" + str(chord) + "/" + str(chord_name).replace(" ", "_")
             chord_uri = omo + str(chord_name).replace(" ", "_") + str([note.name[0] 
                                                                        + str(note.duration).split(".")[2].replace(" ", "_").replace(".", "").replace(">", "") 
                                                                        + str(note.pitch).replace("#", "Sharp").replace("-", "Flat") for note in chord_notes]).replace("[", "").replace("]", "").replace(",", "/").replace(" ", "").replace("'", "")
