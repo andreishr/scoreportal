@@ -3,6 +3,9 @@ from dotenv import load_dotenv
 import os
 import json
 
+def uri_replace(s):
+    return s.replace(" ", "_").replace("\\", "_").replace("[","").replace("]", "").replace("(","").replace(")","").replace("<", "_").replace("&","").replace(">", "_").replace("%", "_").replace("?", "_").replace("'","").replace("|", "_").replace(".", "_").replace(",","_")
+
 load_dotenv()
 def read_dictionary_from_txt(file_path):
     with open(file_path, 'r') as file:
@@ -12,8 +15,7 @@ def read_dictionary_from_txt(file_path):
 
 dict_path = os.getenv('DICT_PATH')
 
-    
-        
+
 '''
 Create namespace and Graph for the ontology
 '''
@@ -304,11 +306,12 @@ Add instances
 '''
 # Song instance
 i = 0
-for file_name in os.listdir(dict_path)[:1]:
+for file_name in os.listdir(dict_path):
     song_dict = read_dictionary_from_txt(f'{dict_path}/{file_name}')
     for song in song_dict:
         currentSong = song_dict[song]['songDescription']
         song_uri = omo + "ID_" + str(i) + "/" + song
+        song_uri = uri_replace(song_uri)
         print(song_uri)
         g.add((URIRef(song_uri), RDF.type, omo.Song))
         g.add((URIRef(song_uri), omo.SongComposer, Literal(f"{currentSong[1]}"))) 
@@ -318,7 +321,7 @@ for file_name in os.listdir(dict_path)[:1]:
 
         for part in parts:
             part_uri = song_uri + "/Part/" + part.replace(" ", "_")
-            print(part_uri)
+            part_uri = uri_replace(part_uri)
             scale = parts[part][0]
             length = parts[part][1]
             clef = parts[part][2]
@@ -332,7 +335,6 @@ for file_name in os.listdir(dict_path)[:1]:
             g.add((URIRef(part_uri), omo.PartSignature, Literal(f"{signature}")))
             g.add((URIRef(part_uri), omo.PartInstrument, Literal(f"{instrument}")))
             g.add((URIRef(song_uri), omo.hasPart, URIRef(part_uri)))
-            print(scale, length, clef, signature, instrument)
 
             noteList = parts[part][5]
             for note in noteList:
@@ -365,7 +367,6 @@ for file_name in os.listdir(dict_path)[:1]:
 
         for measure in measures:
             measure_uri = song_uri + measure
-            print(measure_uri)
             measure_number = measures[measure][0]
             measure_duration =  measures[measure][1].get('duration')
             measure_chords =  measures[measure][2]
@@ -380,22 +381,24 @@ for file_name in os.listdir(dict_path)[:1]:
                 chord_uri = omo + str(chord_name).replace(" ", "_") + str([note.get('name')[0] 
                                                                         + 'Duration_' + str(note.get('duration')).split(".")[0]
                                                                         + str(note.get('name')).replace("#", "Sharp").replace("-", "Flat") + str(note.get('pitch_octave')) for note in chord_notes]).replace("[", "").replace("]", "").replace(",", "/").replace(" ", "").replace("'", "")
-                print(chord_uri)
-        #         g.add((URIRef(chord_uri), RDF.type, omo.Chord))
-        #         g.add((URIRef(chord_uri), omo.ChordName, Literal(f"{chord_name}")))
-        #         g.add((URIRef(chord_uri), omo.ChordDuration, Literal(f"{chord_duration}")))
-        #         chord_noteList = []
-        #         chord_pitchList = []
-        #         for note in chord_notes:
-        #             note_uri = omo + "Note/" + note.name[0] + "/Dur/" + str(note.duration).split(".")[2].replace(" ", "_").replace(".", "").replace(">", "")
-        #             pitch_uri = note_uri + "/Pitch" + str(note.pitch).replace("#", "Sharp").replace("-", "Flat")
-        #             g.add((URIRef(chord_uri), omo.containsNote, URIRef(note_uri)))
-        #             g.add((URIRef(chord_uri), omo.containsPitch, URIRef(pitch_uri)))
-        #             chord_noteList.append(note.name[0])
-        #             chord_pitchList.append(note.pitch.name + str(note.pitch.octave))
-        #         g.add((URIRef(chord_uri), omo.ChordNotes, Literal(f"{chord_noteList}")))
-        #         g.add((URIRef(chord_uri), omo.ChordPitches, Literal(f"{chord_pitchList}")))
-        #         g.add((URIRef(measure_uri), omo.hasChord, URIRef(chord_uri)))
+                g.add((URIRef(chord_uri), RDF.type, omo.Chord))
+                g.add((URIRef(chord_uri), omo.ChordName, Literal(f"{chord_name}")))
+                g.add((URIRef(chord_uri), omo.ChordDuration, Literal(f"{chord_duration}")))
+                chord_noteList = []
+                chord_pitchList = []
+                for note in chord_notes:
+                    note_uri = omo + "Note/" + note['name'][0]+ "/Dur/" + 'Duration_' + str(note.get('duration')).split(".")[0]
+                    if note.get('pitch_accidental') == 'None':
+                        pitch_uri = note_uri + "/Pitch" + note.get('name')[0] + str(note.get('pitch_octave'))
+                    else:
+                        pitch_uri = note_uri + "/Pitch" + note.get('name')[0] + note.get('pitch_accidental') +str(note.get('pitch_octave'))
+                    g.add((URIRef(chord_uri), omo.containsNote, URIRef(note_uri)))
+                    g.add((URIRef(chord_uri), omo.containsPitch, URIRef(pitch_uri)))
+                    chord_noteList.append(note.get('name')[0])
+                    chord_pitchList.append(note.get('name') + str(note.get('pitch_octave')))
+                g.add((URIRef(chord_uri), omo.ChordNotes, Literal(f"{chord_noteList}")))
+                g.add((URIRef(chord_uri), omo.ChordPitches, Literal(f"{chord_pitchList}")))
+                g.add((URIRef(measure_uri), omo.hasChord, URIRef(chord_uri)))
 
     i += 1
 

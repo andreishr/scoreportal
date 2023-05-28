@@ -8,7 +8,7 @@ class MusicElementEncoder(json.JSONEncoder):
             return {
                 '__class__': 'Note',
                 'name': obj.name,
-                'duration': obj.duration.quarterLength,
+                'duration': str(obj.duration.quarterLength),
                 'pitch_octave': obj.pitch.octave,
                 'pitch_accidental': str(obj.pitch.accidental)
                 # Add any other relevant properties you want to serialize
