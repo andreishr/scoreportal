@@ -2,13 +2,25 @@ import os
 from music21 import *
 from dotenv import load_dotenv
 from termcolor import colored, cprint
+import json
+from encoder import *
+
+def save_dictionary_to_txt(dictionary, file_path):
+    # with open(file_path, 'w') as file:
+    #     for key, value in dictionary.items():
+    #         file.write(f"{key}: {value}\n")
+    with open(file_path, 'w') as file:
+        json.dump(dictionary, file, cls=MusicElementEncoder)
+
 # Load environment variable
 load_dotenv()
 dir_path = os.getenv('SONG_PATH')
+dict_path = os.getenv('DICT_PATH')
 # Declare dictionaries to be used for classes:
-song_dict = {}
+
 # Loop through each file in the directory [:1] only for testing things
-for file_name in os.listdir(dir_path):
+for file_name in os.listdir(dir_path)[:1]:
+    song_dict = {}
     songAttr_dict = {}
     parts_dict = {}
     measures_dict = {}
@@ -92,7 +104,7 @@ for file_name in os.listdir(dir_path):
             part = part.stripTies()
             notes = part.recurse().notes
             note_list = []
-            for thisNote in notes:
+            for thisNote in notes[:10]:
                 if thisNote.isChord:
                     for oneNote in thisNote.notes:
                         note_list.append(oneNote)
@@ -118,8 +130,6 @@ for file_name in os.listdir(dir_path):
         songAttr_dict['Parts'] = parts_dict
         
 
-        
-
         '''
         Get chords for a specific part
             *schord represents the original score chordified at the beginning with .cordify() method
@@ -131,7 +141,7 @@ for file_name in os.listdir(dir_path):
         '''
     #     cprint('\n Chordified score has following chords at each measure:', 'green', attrs=["bold"])
         measures = schord.getElementsByClass('Measure')
-        for measure in measures:
+        for measure in measures[:5]:
             chord_nr = 0
             chord_dict = {} 
             print(colored('Measure number: ', 'blue', attrs = ["bold"]) + str(measure.measureNumber) + colored(' Measure duration: ', 'blue', attrs=["bold"]) + str(measure.barDuration))
@@ -159,7 +169,8 @@ for file_name in os.listdir(dir_path):
             measures_dict["M"+str(measure.measureNumber)]=[measure.measureNumber, measure.barDuration, chord_dict]
         songAttr_dict['Measures'] = measures_dict
         song_dict[str(file_name).split('.')[0]] = songAttr_dict
-
+        print(song_dict)
+        save_dictionary_to_txt(song_dict, f'{dict_path}/{songAttr_dict["songDescription"][0]}.json')
             
     #         chord_list = []
     #         print(colored('At measure number: ', attrs=['bold']) + str(measure.number))
