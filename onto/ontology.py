@@ -406,6 +406,6 @@ for file_name in os.listdir(dict_path):
 g.add((omo.ClassicGenre, RDF.type, omo.MusicGenre))
 g.add((omo.ClassicGenre, omo.GenreType, Literal("Classic")))
 
-# serialize the ontology in turtle format and save to file
+# Serialize the ontology in turtle format and save to file
 with open("ontology.ttl", "wb") as f:
     f.write(g.serialize(format="turtle").encode('utf-8'))
