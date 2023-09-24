@@ -1,4 +1,4 @@
-.scoreenv/
+.app310env/
 .env
 onto/__pycache__/
 onto/files/songfiles
