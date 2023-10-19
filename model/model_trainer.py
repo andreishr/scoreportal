@@ -1,39 +1,48 @@
-from parsingttl import graph, get_interval_rdfs
-from pyrdf2vec import RDF2VecTransformer
-from pyrdf2vec.embedders import Word2Vec 
-from pyrdf2vec.graphs import KG, Vertex
-from pyrdf2vec.walkers import RandomWalker
-from tqdm import tqdm
-# print(get_interval_rdfs())
+import torch
+import torch.nn.functional as F
+from torch_geometric.nn import GCNConv
 
-if __name__ == '__main__':
-    kg = KG()
+class GCN(torch.nn.Module):
+    def __init__(self, input_dim, hidden_dim, num_layers):
+        super().__init__()
 
-    list_entities = []
+        self.num_layers = num_layers
+        self.convs = torch.nn.ModuleList() 
+        self.convs.append(GCNConv(input_dim, hidden_dim))
+        for _ in range(self.num_layers - 2): 
+            self.convs.append(GCNConv(hidden_dim, hidden_dim))
+        self.convs.append(GCNConv(hidden_dim, hidden_dim))
 
-    for subject, predicate, obj in graph:   
-        s = Vertex(str(subject))
-        list_entities.append(s.name)
-        o = Vertex(str(obj))
-        list_entities.append(o.name)
-        p = Vertex(str(predicate), predicate=True, vprev = s, vnext = o)
-        kg.add_walk(s, p, o)
-                
-    # for entity in list_entities:
-    #     print(Vertex(entity.name))
+    def forward(self, data):
+        x, edge_index = data.x, data.edge_index
 
-    # for entity in kg._entities:
-    #     print(entity)
+        for i in range(self.num_layers):
+            x = self.convs[i](x, edge_index)
+            x = F.relu(x)
+            x = F.dropout(x, training=self.training)
 
-    # Create an RDF2VecTransformer
-    rdf2vec = RDF2VecTransformer(
-        Word2Vec(epochs=1),
-        walkers=[RandomWalker(4, 10, with_reverse=False, n_jobs=2)], verbose=1)  # Adjust parameters as needed
+        return F.log_softmax(x, dim=1)
+    
 
+# import torch
+# import torch_geometric
+# from torch_geometric.nn import GCNConv
+# import torch.nn as nn
+# import torch.nn.functional as F
+# class GNNNodeClassifier(nn.Module):
+#     def __init__(self, input_dim, hidden_dim):
+#         super(GNNNodeClassifier, self).__init__()
+#         self.conv1 = GCNConv(input_dim, hidden_dim)
+#         self.conv2 = GCNConv(hidden_dim, hidden_dim)
 
-    embeddings, literals = rdf2vec.fit_transform(kg, list_entities)
-
-    rdf2vec.save("model_data")
-
-    for literal, embedding in zip(literals, embeddings):
-        print(f"Entity: {literal}, Embedding: {embedding}")
+#     def forward(self, data):
+#         x, edge_index = data.x, data.edge_index
+        
+#         # Apply the first GCN layer
+#         x = self.conv1(x, edge_index)
+#         x = F.relu(x)
+        
+#         # Apply the second GCN layer (output layer)
+#         x = self.conv2(x, edge_index)
+        
+#         return x
