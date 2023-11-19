@@ -306,17 +306,24 @@ Add instances
 '''
 # Song instance
 i = 0
+# For each file in the path directory
 for file_name in os.listdir(dict_path):
+    # Read the file
     song_dict = read_dictionary_from_txt(f'{dict_path}/{file_name}')
+    # For each song in song dictionary
     for song in song_dict:
+        # Get details about current song from the songDescription list of details
         currentSong = song_dict[song]['songDescription']
         song_uri = omo + "ID_" + str(i) + "/" + song
         song_uri = uri_replace(song_uri)
         print(song_uri)
+        # Add to graph the song URI as song type and details read
         g.add((URIRef(song_uri), RDF.type, omo.Song))
         g.add((URIRef(song_uri), omo.SongComposer, Literal(f"{currentSong[1]}"))) 
         g.add((URIRef(song_uri), omo.SongTitle, Literal(f"{currentSong[0]}")))
+        # Get the parts from the Parts key
         parts = song_dict[song]['Parts']
+        # Get the measures from the Measure key
         measures = song_dict[song]['Measures']
 
         for part in parts:

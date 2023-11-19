@@ -5,3 +5,7 @@ onto/files/songfiles
 onto/files/dictfiles
 model/__pycache__
 model_data
+ontology.ttl
+ontologyv1.ttl
+modelv2.model
+modelv2emb.emb
