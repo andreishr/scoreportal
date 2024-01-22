@@ -19,6 +19,7 @@ graph.parse("scoreportal/ontology.ttl", format="turtle")
 # Create an empty NetworkX graph
 nx_graph = nx.Graph()
 songs_list = []
+chord_list = []
 
 song_uri_constant = "http://onemusiconto.com/omo#Song"
 part_uri_constant = "http://onemusiconto.com/omo#Part"
@@ -32,6 +33,9 @@ for s, p, o in graph:
     if song_uri_constant in o:
         songs_list.append(s)
 
+    if chord_uri_constant in o:
+        chord_list.append(s)
+
     nx_graph.add_node(s)
     nx_graph.add_node(o)
     nx_graph.add_edge(s, o)
@@ -42,7 +46,7 @@ for s, p, o in graph:
 #             if node1 != node2:
 #                 similarity = word_vectors.similarity(str(node1), str(node2))
 #                 print(f"Similarity between {node1} and {node2}: {similarity}")
-                
+
 def get_songs_similarity(elements):
     individuals_tuple_list = []
     checks = set()
@@ -71,4 +75,5 @@ def write_to_file(file, list_of_tuples):
             line = ','.join(map(str, tpl))
             file.write(line + '\n') 
 
-write_to_file(songs_file_path, song_similarity_list)
+print(len(songs_list))
+# write_to_file(songs_file_path, song_similarity_list)
