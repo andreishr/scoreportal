@@ -25,8 +25,6 @@ measure_attributes = {}
 chord_set = set()
 chord_attributes = {}
 
-
-
 # Getting all measues and chords
 for s, p, o in graph:
 
