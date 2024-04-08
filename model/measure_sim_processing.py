@@ -78,10 +78,26 @@ for elem in measure_attributes:
     measure_name = elem
     measure_object_list.append(Measure(measure_name, measure_duration, measure_number, chord_tmp_list))
 
-for ms in measure_object_list:
-    print(ms.name)
-    for chord in ms.chords:
-        print(chord.name)
 
+def get_element_similarity(elements, verbose = 0):
+    individuals_tuple_list = []
+    checks = set()
+    for first_element in elements:
+        for second_element in elements:
+            if first_element != second_element and (first_element, second_element) not in checks and (second_element, first_element) not in checks:
+                similarity = 1 # to be replaced with method that computes similarity between meaasures
+                individuals_tuple_list.append((first_element, second_element, similarity))
+            checks.add((first_element, second_element))
 
+    individuals_tuple_list.sort(key=lambda x: x[2], reverse=True)
     
+    if verbose != 0:
+        for similarity_tuple in individuals_tuple_list[:150]:
+            cprint(similarity_tuple[0].name, 'cyan', attrs=["bold"])
+            cprint(similarity_tuple[1].name, 'cyan', attrs=["bold"])
+            cprint(similarity_tuple[2], 'green', attrs=["bold"])
+
+    return individuals_tuple_list
+    
+
+get_element_similarity(measure_object_list, 1)
