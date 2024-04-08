@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import ast
 
 from classes.chord import Chord
+from classes.measure import Measure
 
 load_dotenv()
 # Getting URI constants
@@ -56,10 +57,8 @@ for s, p, o in graph:
             chord_attributes[s].append([p, o])
 
 
-for elem in chord_attributes:
-    print(elem)
-# Processig objets and appending to lists
 for elem in measure_attributes:
+    chord_tmp_list = []
     for measure_attribute in measure_attributes[elem]:
         if has_chord_uri in measure_attribute[0]:
             chord_name = [item[1].toPython() for item in chord_attributes[measure_attribute[1]] if "http://onemusiconto.com/omo#ChordName" in item[0]]
@@ -68,27 +67,21 @@ for elem in measure_attributes:
             chord_pitch_list = [ast.literal_eval(item[1].toPython()) for item in chord_attributes[measure_attribute[1]] if "http://onemusiconto.com/omo#ChordPitches" in item[0]][0]
             chord_notes = [item[1].toPython() for item in chord_attributes[measure_attribute[1]] if "http://onemusiconto.com/omo#containsNote" in item[0]]
             chord_note_list = [ast.literal_eval(item[1].toPython()) for item in chord_attributes[measure_attribute[1]] if "http://onemusiconto.com/omo#ChordNotes" in item[0]][0]
+            chord_tmp_list.append(Chord(chord_name, chord_duration, chord_pitch_list, chord_note_list, chord_notes, chord_pitches))
+
+            #Optional mapping to chord list
             chord_object_list.append(Chord(chord_name, chord_duration, chord_pitch_list, chord_note_list, chord_notes, chord_pitches))
-            cprint(chord_name, "red")
-            cprint(chord_duration, "red")
-            cprint(chord_pitches, "red")
-            cprint(chord_pitch_list, "red")
-            cprint(chord_notes, "red")
-            cprint(chord_object_list[0].name, "green")
-            # cprint(attribute[1], "red")
-            # cprint(attribute[1].toPython(), "yellow")
-            cprint(chord_attributes[measure_attribute[1]], "yellow")
-    print(elem)
-    cprint(measure_attributes[elem], "cyan")
+           
 
-for chord_obj in chord_object_list:
-    cprint(chord_obj.name, "green")
-    cprint(chord_obj.pitchList, "green")
+    measure_duration = [item[1].toPython() for item in measure_attributes[elem] if "http://onemusiconto.com/omo#MeasureDuration" in item[0]]
+    measure_number = [item[1].toPython() for item in measure_attributes[elem] if "http://onemusiconto.com/omo#MeasureNumber" in item[0]]
+    measure_name = elem
+    measure_object_list.append(Measure(measure_name, measure_duration, measure_number, chord_tmp_list))
 
-    #For measure in measures
-    #Check if first element is has chord
-    #Get it from chord attributes
-    #Map it to object and add to chord list
-    #Map the rest of the measure to the measure list
+for ms in measure_object_list:
+    print(ms.name)
+    for chord in ms.chords:
+        print(chord.name)
+
 
     
