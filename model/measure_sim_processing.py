@@ -85,14 +85,14 @@ def get_element_similarity(elements, verbose = 0):
     for first_element in elements:
         for second_element in elements:
             if first_element != second_element and (first_element, second_element) not in checks and (second_element, first_element) not in checks:
-                similarity = 1 # to be replaced with method that computes similarity between meaasures
+                similarity = get_sim_score(first_element, second_element)
                 individuals_tuple_list.append((first_element, second_element, similarity))
             checks.add((first_element, second_element))
 
     individuals_tuple_list.sort(key=lambda x: x[2], reverse=True)
     
     if verbose != 0:
-        for similarity_tuple in individuals_tuple_list[:150]:
+        for similarity_tuple in individuals_tuple_list[:5]:
             cprint(similarity_tuple[0].name, 'cyan', attrs=["bold"])
             cprint(similarity_tuple[1].name, 'cyan', attrs=["bold"])
             cprint(similarity_tuple[2], 'green', attrs=["bold"])
@@ -100,4 +100,18 @@ def get_element_similarity(elements, verbose = 0):
     return individuals_tuple_list
     
 
-get_element_similarity(measure_object_list, 1)
+def get_sim_score(elem1: Measure, elem2: Measure):
+    sc =  get_sc_score(elem1.chords, elem2.chords, "list")
+    wc = 0.4
+    sm = wc * sc
+    return sm
+
+def get_sc_score(chord_list1, chord_list2, byCriteria: str):
+    if byCriteria == "list":
+        set_of_tuples = {tuple(chord.noteList) for chord in chord_list2}
+        common_chords = [chord for chord in chord_list1 if tuple(chord.noteList) in set_of_tuples]
+
+        return len(common_chords) / len(chord_list1 + chord_list2)
+    
+get_element_similarity(measure_object_list[:15], 1)
+
