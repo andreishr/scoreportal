@@ -14,6 +14,8 @@ def read_dictionary_from_txt(file_path):
     return data
 
 dict_path = os.getenv('DICT_PATH')
+dict_path = 'onto/files/dictfiles/20240420'
+
 
 
 '''
@@ -162,6 +164,16 @@ g.add((omo.ChordDuration, RDF.type, OWL.DatatypeProperty))
 g.add((omo.ChordDuration, RDFS.label, Literal("Chord Duration (in seocnds)")))
 g.add((omo.ChordDuration, RDFS.range, RDFS.Literal))
 g.add((omo.ChordDuration, RDFS.domain, omo.Chord))
+# ChordOffset:
+g.add((omo.ChordOffset, RDF.type, OWL.DatatypeProperty))
+g.add((omo.ChordOffset, RDFS.label, Literal("Chord offset (in measure)")))
+g.add((omo.ChordOffset, RDFS.range, RDFS.Literal))
+g.add((omo.ChordOffset, RDFS.domain, omo.Chord))
+# ChordFrequencies:
+g.add((omo.ChordFrequencies, RDF.type, OWL.DatatypeProperty))
+g.add((omo.ChordFrequencies, RDFS.label, Literal("Chord frequencies")))
+g.add((omo.ChordFrequencies, RDFS.range, RDFS.Literal))
+g.add((omo.ChordFrequencies, RDFS.domain, omo.Chord))
 # NoteList:
 g.add((omo.ChordNotes, RDF.type, OWL.DatatypeProperty))
 g.add((omo.ChordNotes, RDFS.label, Literal("Chord Notes")))
@@ -385,12 +397,16 @@ for file_name in os.listdir(dict_path):
                 chord_name = measure_chords[chord][0]
                 chord_duration = measure_chords[chord][1]
                 chord_notes = measure_chords[chord][2]
-                chord_uri = omo + str(chord_name).replace(" ", "_") + str([note.get('name')[0] 
+                chord_offset = measure_chords[chord][3]
+                chord_frequencies = measure_chords[chord][4]
+                chord_uri = omo + 'C_Dur_' + str(chord_duration).split(".")[0] + 'Offset_' + str(chord_offset).replace(".", "_") + str(chord_name).replace(" ", "_") + str([note.get('name')[0] 
                                                                         + 'Duration_' + str(note.get('duration')).split(".")[0]
                                                                         + str(note.get('name')).replace("#", "Sharp").replace("-", "Flat") + str(note.get('pitch_octave')) for note in chord_notes]).replace("[", "").replace("]", "").replace(",", "/").replace(" ", "").replace("'", "")
                 g.add((URIRef(chord_uri), RDF.type, omo.Chord))
                 g.add((URIRef(chord_uri), omo.ChordName, Literal(f"{chord_name}")))
                 g.add((URIRef(chord_uri), omo.ChordDuration, Literal(f"{chord_duration}")))
+                g.add((URIRef(chord_uri), omo.ChordOffset, Literal(f"{chord_offset}")))
+                g.add((URIRef(chord_uri), omo.ChordFrequencies, Literal(f"{chord_frequencies}")))
                 chord_noteList = []
                 chord_pitchList = []
                 for note in chord_notes:
@@ -414,5 +430,5 @@ g.add((omo.ClassicGenre, RDF.type, omo.MusicGenre))
 g.add((omo.ClassicGenre, omo.GenreType, Literal("Classic")))
 
 # Serialize the ontology in turtle format and save to file
-with open("ontology.ttl", "wb") as f:
+with open("ontologyv2.ttl", "wb") as f:
     f.write(g.serialize(format="turtle").encode('utf-8'))

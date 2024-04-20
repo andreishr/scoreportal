@@ -13,6 +13,7 @@ def save_dictionary_to_txt(dictionary, file_path):
 load_dotenv()
 dir_path = os.getenv('SONG_PATH')
 dict_path = os.getenv('DICT_PATH')
+dict_path = 'onto/files/dictfiles/20240420'
 # Declare dictionaries to be used for classes:
 songCount = 0
 # Loop through each file in the directory [:1] only for testing things
@@ -147,13 +148,16 @@ for file_name in os.listdir(dir_path):
                     chordEnd = elem['endTimeSeconds']
                     chordNotes = thisChord.notes
                     chordPitches = thisChord.pitches
-                    chord_dict[chord_nr] = [chordName, chordDuration, chordNotes]
+                    frequency_list = ['%.3f'%single_pitch.frequency for single_pitch in chordPitches]
+                    chordOffset = float(thisChord.offset)
+                    chord_dict[chord_nr] = [chordName, chordDuration, chordNotes, chordOffset, frequency_list]
                     chord_nr += 1
             measures_dict["M"+str(measure.measureNumber)]=[measure.measureNumber, measure.barDuration, chord_dict]
         songAttr_dict['Measures'] = measures_dict
         song_dict[str(file_name).split('.')[0]] = songAttr_dict
         # print(song_dict)
         new_file_name = file_name.replace(" ", "_").replace("\\", "_").replace('\n', '').replace("?", "_").replace("'", "_").replace("(", "").replace("(", "").replace("/", "")
+        print(dict_path)
         save_path = str(dict_path+ '/' + new_file_name)
         save_dictionary_to_txt(song_dict, f'{save_path}.json')
         print(f'Song number: {songCount}')

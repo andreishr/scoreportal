@@ -20,7 +20,7 @@ contains_note_uri = os.getenv('CONTAINS_NOTES_LIST_URI')
 has_chord_uri = os.getenv('HAS_CHORD_URI')
 #Parsing graph data
 graph = Graph()
-graph.parse("scoreportal/ontology.ttl", format="turtle")
+graph.parse("scoreportal/ontologyv2.ttl", format="turtle")
 
 #Initializing utils
 chord_object_list = []
@@ -70,10 +70,13 @@ for elem in measure_attributes:
             chord_pitch_list = [ast.literal_eval(item[1].toPython()) for item in chord_attributes[measure_attribute[1]] if "http://onemusiconto.com/omo#ChordPitches" in item[0]][0]
             chord_notes = [item[1].toPython() for item in chord_attributes[measure_attribute[1]] if "http://onemusiconto.com/omo#containsNote" in item[0]]
             chord_note_list = [ast.literal_eval(item[1].toPython()) for item in chord_attributes[measure_attribute[1]] if "http://onemusiconto.com/omo#ChordNotes" in item[0]][0]
-            chord_tmp_list.append(Chord(chord_name, chord_duration, chord_pitch_list, chord_note_list, chord_notes, chord_pitches))
+            chord_offset = [item[1].toPython() for item in chord_attributes[measure_attribute[1]] if "http://onemusiconto.com/omo#ChordOffset" in item[0]]
+            chord_frequencies = [ast.literal_eval(item[1].toPython()) for item in chord_attributes[measure_attribute[1]] if "http://onemusiconto.com/omo#ChordFrequencies" in item[0]][0]
+
+            chord_tmp_list.append(Chord(chord_name, chord_duration, chord_pitch_list, chord_note_list, chord_notes, chord_pitches, chord_offset, chord_frequencies))
 
             #Optional mapping to chord list
-            chord_object_list.append(Chord(chord_name, chord_duration, chord_pitch_list, chord_note_list, chord_notes, chord_pitches))
+            chord_object_list.append(Chord(chord_name, chord_duration, chord_pitch_list, chord_note_list, chord_notes, chord_pitches, chord_offset, chord_frequencies))
            
 
     measure_duration = [item[1].toPython() for item in measure_attributes[elem] if "http://onemusiconto.com/omo#MeasureDuration" in item[0]]
@@ -110,7 +113,9 @@ def get_sim_score(elem1: Measure, elem2: Measure):
     wml = 0.1
     sr = get_sr_score(elem1.chords, elem2.chords)
     wsr = 0.3
-    sm = wc * sc + wml * sml + sr * wsr
+    spd = get_spd_score(elem1.chords, elem2.chords)
+    wpd = 0.2
+    sm = wc * sc + wml * sml + sr * wsr + spd * wpd
     return sm
 
 def get_sc_score(chord_list1, chord_list2, byCriteria: str):
@@ -152,6 +157,56 @@ def get_sr_score(chord_list1, chord_list2):
 
     return dot_p / (norm_v1 * norm_v2)
 
+def get_spd_score(chord_list1, chord_list2):
+        all_values = {value for obj in chord_list1 + chord_list2 for value in obj.pitches}
+        checked_values = set()
+        # dictionary = {}
+        jaccard_vect1 = []
+        jaccard_vect2 = []
+        for value in all_values:
+            if(value not in checked_values):
+                # Check if the value is in list1
+                in_list1 = any(value in obj.pitches for obj in chord_list1)
+                # Check if the value is in list2
+                in_list2 = any(value in obj.pitches for obj in chord_list2)
+
+                jaccard_vect1.append(1 if in_list1 else 0)
+                jaccard_vect2.append(1 if in_list2 else 0)
+
+                # dictionary[value] = [1 if in_list1 else 0, 1 if in_list2 else 0]
+
+            checked_values.add(value)
+        # cprint(dictionary, "cyan")
+        cprint(jaccard_vect2, "yellow")
+        cprint(jaccard_vect1, "green")
+        cprint(jaccard_binary(jaccard_vect1, jaccard_vect2), "blue")
+        return jaccard_binary(jaccard_vect1, jaccard_vect2)
+
+def jaccard_binary(x,y):
+    intersection = np.logical_and(x, y)
+    union = np.logical_or(x, y)
+    similarity = intersection.sum() / float(union.sum())
+    return similarity
+
+
+
+# for measure in measure_attributes:
+#     print(measure, measure_attributes[measure])
+
+
+"""
+To be implemented a function of frequency:
+f(x)=A*sin(2pi*f*x)
+Assumtions:
+- all amplitudes are the same
+- there is not phase shift
+- applied only on measures with the same length
+
+"""
+
+for obj in chord_object_list:
+    cprint(obj.frequencies, "red")
+    cprint(obj.offset, "yellow")
+
 
 get_element_similarity(measure_object_list[:15], 1)
-
