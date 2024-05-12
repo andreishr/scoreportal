@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import ast
 import math
 import numpy as np
-
+from scipy import quad
 
 from classes.chord import Chord
 from classes.measure import Measure
@@ -87,12 +87,15 @@ for elem in measure_attributes:
 
 def get_element_similarity(elements, verbose = 0):
     individuals_tuple_list = []
+    individuals_tuple_list_integral = []
     checks = set()
     for first_element in elements:
         for second_element in elements:
             if first_element != second_element and (first_element, second_element) not in checks and (second_element, first_element) not in checks:
                 similarity = get_sim_score(first_element, second_element)
+                similarity_integral = get_mes_sim_integral_based(first_element, second_element)
                 individuals_tuple_list.append((first_element, second_element, similarity))
+                individuals_tuple_list_integral.append((first_element, second_element, similarity_integral))
             checks.add((first_element, second_element))
 
     individuals_tuple_list.sort(key=lambda x: x[2], reverse=True)
@@ -103,6 +106,11 @@ def get_element_similarity(elements, verbose = 0):
             cprint(similarity_tuple[1].name, 'cyan', attrs=["bold"])
             cprint(similarity_tuple[2], 'green', attrs=["bold"])
 
+    if verbose != 0:
+        for similarity_tuple in individuals_tuple_list_integral[:5]:
+            cprint(similarity_tuple[0].name, 'cyan', attrs=["bold"])
+            cprint(similarity_tuple[1].name, 'cyan', attrs=["bold"])
+            cprint(similarity_tuple[2], 'green', attrs=["bold"])
     return individuals_tuple_list
     
 
@@ -177,9 +185,9 @@ def get_spd_score(chord_list1, chord_list2):
 
             checked_values.add(value)
         # cprint(dictionary, "cyan")
-        cprint(jaccard_vect2, "yellow")
-        cprint(jaccard_vect1, "green")
-        cprint(jaccard_binary(jaccard_vect1, jaccard_vect2), "blue")
+        # cprint(jaccard_vect2, "yellow")
+        # cprint(jaccard_vect1, "green")
+        # cprint(jaccard_binary(jaccard_vect1, jaccard_vect2), "blue")
         return jaccard_binary(jaccard_vect1, jaccard_vect2)
 
 def jaccard_binary(x,y):
@@ -198,15 +206,102 @@ def jaccard_binary(x,y):
 To be implemented a function of frequency:
 f(x)=A*sin(2pi*f*x)
 Assumtions:
-- all amplitudes are the same
-- there is not phase shift
+- all amplitudes are the same (use 1)
+- there is no phase shift
 - applied only on measures with the same length
 
 """
 
-for obj in chord_object_list:
-    cprint(obj.frequencies, "red")
-    cprint(obj.offset, "yellow")
+def function_of_x(x, c_list):
+    sum_of_f = 0
+    for c in c_list:
+        sum_of_f += math.sin(2*math.pi*c*x)
+    return sum_of_f
+
+def get_mes_sim_integral_based(measure_element1, measure_element2):
+    sorted_chords_m1 = sorted(measure_element1.chords, key=lambda x: x.offset)
+    sorted_chords_m2 = sorted(measure_element2.chords, key=lambda x: x.offset)
+    if measure_element1.duration[0] == measure_element2.duration[0]:
+        offsets1 = []
+        offsets2 = []
+        durations1 = []
+        durations2 = []
+        freqs1 = []
+        freqs2 = []
+        for chordm1 in sorted_chords_m1:
+            offsets1.append(float(chordm1.offset[0]))
+            durations1.append(float(chordm1.duration[0]))
+            freqs1.append(chordm1.frequencies)
+        for chordm2 in sorted_chords_m2:
+            offsets2.append(float(chordm2.offset[0]))
+            durations2.append(float(chordm2.duration[0]))
+            freqs2.append(chordm2.frequencies)
+        get_dictionary_for_f_x(offsets1, offsets2, durations1, durations2, freqs1, freqs2, float(measure_element1.duration[0]))
+
+    cprint(measure_element1.duration, "red")
+    # for elem in sorted_chords_m1:
+    #     cprint(elem.offset, "green")
+    #     cprint(max(elem.duration), "blue")
+    # for elem in sorted_chords_m2:
+    #     cprint(elem.offset, "yellow")
+    #     cprint(max(elem.duration), "cyan")
+
+def get_dictionary_for_f_x(offsets1, offsets2, durations1, durations2, freqs1, freqs2, m_duration):
+    dict1, tup_list1 = compose_dict(offsets1, durations1, freqs1, m_duration)
+    dict2, tup_list2 = compose_dict(offsets2, durations2, freqs2, m_duration)
+    print(tup_list1)
+    tup_list1.extend(tup_list2)
+    print(tup_list1)
+    final_composed = get_final_list(tup_list1)
+    print(final_composed)
+    for val in final_composed:
+        quad(function_of_x)
+    # Print the resulting dictionary
+    
+def compose_dict(list_offsets: list, list_durations: list, list_values: list, max_duration):
+    print(max_duration)
+    dict = {}
+    tup_list = []
+    for i, offset in enumerate(list_offsets):
+        dict[str([float(offset), offset+list_durations[i]])] = list_values[i]
+        tup_list.append((float(offset), offset+list_durations[i], list_values[i]))
+        if i < len(list_offsets) - 1:
+            if offset+list_durations[i] < list_offsets[i+1]:
+                dict[str([offset+list_durations[i], list_offsets[i+1]])] = 0
+                tup_list.append((offset+list_durations[i], list_offsets[i+1], 0))
+        elif offset+list_durations[i] < max_duration:
+            dict[str([offset+list_durations[i], float(max_duration)])] = 0
+            tup_list.append((offset+list_durations[i], float(max_duration), 0))
+    return dict, tup_list
 
 
-get_element_similarity(measure_object_list[:15], 1)
+def get_final_list(extended_list):
+    ranges = extended_list
+    endpoints = sorted(list(set([r[0] for r in ranges] + [r[1] for r in ranges])))
+    start = {}
+    end = {}
+    for e in endpoints:
+        start[e] = set()
+        end[e] = set()
+
+    for r in ranges:
+        start[r[0]].add(str(r[2]))
+        end[r[1]].add(str(r[2]))
+
+    current_ranges = set()
+
+    final_list = []
+
+    for e1, e2 in zip(endpoints[:-1], endpoints[1:]):
+        current_ranges.difference_update(end[e1])
+        current_ranges.update(start[e1])
+        final_list.append([e1, e2, ast.literal_eval(','.join(current_ranges))])
+        # print(e1, e2, ','.join(current_ranges))
+    return final_list
+
+def get_c_values(obj_values, offset, duration):
+    return obj_values if float(offset) == 0.0 else 0
+
+# Print the resulting dictionary
+
+get_element_similarity(measure_object_list[:2], 1)
