@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import ast
 import math
 import numpy as np
-from scipy import quad
+from scipy.integrate import quad
 
 from classes.chord import Chord
 from classes.measure import Measure
@@ -99,6 +99,7 @@ def get_element_similarity(elements, verbose = 0):
             checks.add((first_element, second_element))
 
     individuals_tuple_list.sort(key=lambda x: x[2], reverse=True)
+    individuals_tuple_list_integral.sort(key=lambda x: x[2])
     
     if verbose != 0:
         for similarity_tuple in individuals_tuple_list[:5]:
@@ -106,11 +107,16 @@ def get_element_similarity(elements, verbose = 0):
             cprint(similarity_tuple[1].name, 'cyan', attrs=["bold"])
             cprint(similarity_tuple[2], 'green', attrs=["bold"])
 
-    if verbose != 0:
+        print()
+    # integral_values = [v[2] for v in individuals_tuple_list_integral]
+    # min_val = min(integral_values)
+    # max_val = max(integral_values)
+    # scaled_list = [(vs[0], vs[1], (vs[2] - min_val) / (max_val - min_val)) for vs in individuals_tuple_list_integral]
+    # if verbose != 0:
         for similarity_tuple in individuals_tuple_list_integral[:5]:
-            cprint(similarity_tuple[0].name, 'cyan', attrs=["bold"])
-            cprint(similarity_tuple[1].name, 'cyan', attrs=["bold"])
-            cprint(similarity_tuple[2], 'green', attrs=["bold"])
+            cprint(similarity_tuple[0].name, 'yellow', attrs=["bold"])
+            cprint(similarity_tuple[1].name, 'yellow', attrs=["bold"])
+            cprint(similarity_tuple[2], 'red', attrs=["bold"])
     return individuals_tuple_list
     
 
@@ -212,13 +218,26 @@ Assumtions:
 
 """
 
-def function_of_x(x, c_list):
+def g(x, c_list):
     sum_of_f = 0
-    for c in c_list:
-        sum_of_f += math.sin(2*math.pi*c*x)
+    if isinstance(c_list, list):
+        for c in c_list:
+            sum_of_f += math.sin(2*math.pi*float(c)/100*x)
+    else:
+        sum_of_f += math.sin(2*math.pi*float(c_list)/100*x)
+    return sum_of_f
+
+def f(x, c_list):
+    sum_of_f = 0
+    if isinstance(c_list, list):
+        for c in c_list:
+            sum_of_f += math.sin(2*math.pi*float(c)*x)
+    else:
+        sum_of_f += math.sin(2*math.pi*float(c_list)/100*x)
     return sum_of_f
 
 def get_mes_sim_integral_based(measure_element1, measure_element2):
+    integral_score = 0
     sorted_chords_m1 = sorted(measure_element1.chords, key=lambda x: x.offset)
     sorted_chords_m2 = sorted(measure_element2.chords, key=lambda x: x.offset)
     if measure_element1.duration[0] == measure_element2.duration[0]:
@@ -236,9 +255,10 @@ def get_mes_sim_integral_based(measure_element1, measure_element2):
             offsets2.append(float(chordm2.offset[0]))
             durations2.append(float(chordm2.duration[0]))
             freqs2.append(chordm2.frequencies)
-        get_dictionary_for_f_x(offsets1, offsets2, durations1, durations2, freqs1, freqs2, float(measure_element1.duration[0]))
+        integral_score = get_dictionary_for_f_x(offsets1, offsets2, durations1, durations2, freqs1, freqs2, float(measure_element1.duration[0]))
 
-    cprint(measure_element1.duration, "red")
+    return integral_score
+
     # for elem in sorted_chords_m1:
     #     cprint(elem.offset, "green")
     #     cprint(max(elem.duration), "blue")
@@ -249,17 +269,20 @@ def get_mes_sim_integral_based(measure_element1, measure_element2):
 def get_dictionary_for_f_x(offsets1, offsets2, durations1, durations2, freqs1, freqs2, m_duration):
     dict1, tup_list1 = compose_dict(offsets1, durations1, freqs1, m_duration)
     dict2, tup_list2 = compose_dict(offsets2, durations2, freqs2, m_duration)
-    print(tup_list1)
     tup_list1.extend(tup_list2)
-    print(tup_list1)
     final_composed = get_final_list(tup_list1)
-    print(final_composed)
-    for val in final_composed:
-        quad(function_of_x)
+    sum_integral = 0
+  
+    for part in final_composed:
+        if isinstance(part[2], tuple):
+            sum_integral += abs(quad(lambda x: f(x, part[2][0]) - g(x, part[2][1]), part[0], part[1])[0])
+        else:
+           sum_integral += abs(quad(lambda x: f(x, part[2]) - g(x, part[2]), part[0], part[1])[0])
+            
+    return sum_integral
     # Print the resulting dictionary
     
 def compose_dict(list_offsets: list, list_durations: list, list_values: list, max_duration):
-    print(max_duration)
     dict = {}
     tup_list = []
     for i, offset in enumerate(list_offsets):
@@ -304,4 +327,4 @@ def get_c_values(obj_values, offset, duration):
 
 # Print the resulting dictionary
 
-get_element_similarity(measure_object_list[:2], 1)
+get_element_similarity(measure_object_list[:20], 1)
