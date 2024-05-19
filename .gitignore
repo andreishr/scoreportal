@@ -13,3 +13,5 @@ similarity_songs.txt
 ontologyv2.ttl
 onto/chordifier_check.py
 debugs.txt
+modelv3.model
+modelv3emb.emb
