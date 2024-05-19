@@ -232,6 +232,8 @@ Assumtions:
 - all amplitudes are the same (use 1)
 - there is no phase shift
 - applied only on measures with the same length
+- if a chord contains a list of frequencies that is not changed spanning multiple times, it was continuously played, 
+    if it has at least one frequency value changed, it is a new chord 
 
 """
 
@@ -290,38 +292,65 @@ def get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs
     tup_list1.extend(tup_list2)
     final_composed = get_final_list(tup_list1)
     sum_integral = 0
-  
+    cprint(f"Total number of integrals required: {len(final_composed)}", "red", attrs=["bold"])
     for i, part in enumerate(final_composed):
         cprint(part, "green")
+        part_integrating_intervals = []
         if i > 0:
-            part_integrating_intervals = []
             if isinstance(part[2], tuple):
                 # Entering both measures 
                 for chord_freqs_and_offs in part[2]:
+                    interval = []
                     if isinstance(chord_freqs_and_offs, tuple):
-                        interval = []
                         if float(chord_freqs_and_offs[1]) < float(part[0]):
                             interval = [final_composed[i-1][1] - final_composed[i-1][0], final_composed[i-1][1] - final_composed[i-1][0] + part[1] - part[0]]
                         else:
                             interval = [0, part[1] - part[0]]
                     else:
-                        interval = []
                         if chord_freqs_and_offs == 0:
                             #No singing case
                             interval = [0, 0]
                         else:
-                            pass
                             interval = [0, part[1] - part[0]]
-                        cprint(chord_freqs_and_offs, "blue")
+                        # Debug print to see the nature of chords_and_freqs, it might not be a nested list and for loop will iterate through content
+                        # cprint(chord_freqs_and_offs, "blue")
                     part_integrating_intervals.append(tuple(interval))
             else:
                 # No singing in both measures case
                 part_integrating_intervals.append((0, 0))
-
-            cprint(part_integrating_intervals, "cyan", attrs=["bold"])
         else:
-            pass
-            #i == 0 prima integrala aici
+            # i == 0 first integral
+            # cprint(part, "red")
+            part_integrating_intervals.append((part[0], part[1]))
+            # Append twie to avoid index ou of range below - don't want to add another condition...:/
+            part_integrating_intervals.append((part[0], part[1]))
+
+        cprint(part_integrating_intervals, "cyan", attrs=["bold"])
+
+        if isinstance(part[2], tuple):
+            if not isinstance(part[2][1], tuple) and not isinstance(part[2][0], tuple):
+                cprint("Single tuple case: Integral should be 0", "yellow")
+                cprint(part_integrating_intervals, "magenta")
+                # This integral should be 0! 
+                i = quad(f, part_integrating_intervals[0][0], part_integrating_intervals[0][1], args=(part[2][1]))
+                cprint(f"Integral value: {0}", "light_blue", attrs=["bold"])
+                print("\n")
+            else:
+                cprint("Double tuple/0 and tuple case:", "yellow")
+                cprint(part_integrating_intervals, "magenta")
+                i1 = quad(f, part_integrating_intervals[0][0], part_integrating_intervals[0][1], args=(part[2][0][0] if isinstance(part[2][0], tuple) else part[2][0]))
+                i2 = quad(f, part_integrating_intervals[1][0], part_integrating_intervals[1][1], args=(part[2][1][0] if isinstance(part[2][1], tuple) else part[2][1]))
+                cprint(f"First chord or 0 integral: {i1}", "light_green")
+                cprint(f"First chord or 0 integral: {i2}", "light_green")
+                cprint(f"Integral subtraction value: {i1[0]-i2[0]}", "light_blue", attrs=["bold"])
+                print("\n")
+                
+        else:
+            cprint(part_integrating_intervals, "magenta")
+            cprint("0 - not tuple case:", "yellow")
+            cprint(f"Default integral value: {0}", "light_blue", attrs=["bold"])
+
+
 
     for part in final_composed:
         if isinstance(part[2], tuple):
