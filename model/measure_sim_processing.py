@@ -280,27 +280,48 @@ def get_mes_sim_integral_based(measure_element1, measure_element2):
                 offsets2.append(float(chordm2.offset[0]))
                 durations2.append(float(chordm2.duration[0]))
                 freqs2.append((chordm2.frequencies, chordm2.offset[0]))
-            integral_score = get_dictionary_for_f_x(offsets1, offsets2, durations1, durations2, freqs1, freqs2, float(measure_element1.duration[0]))
+            integral_score = get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs2, float(measure_element1.duration[0]))
 
     return integral_score
 
-def get_dictionary_for_f_x(offsets1, offsets2, durations1, durations2, freqs1, freqs2, m_duration):
-    # print(freqs1)
-    # print(freqs2)
+def get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs2, m_duration):
     dict1, tup_list1 = compose_dict(offsets1, durations1, freqs1, m_duration)
     dict2, tup_list2 = compose_dict(offsets2, durations2, freqs2, m_duration)
     tup_list1.extend(tup_list2)
-    print(tup_list1)
     final_composed = get_final_list(tup_list1)
-    cprint(final_composed, "red") 
     sum_integral = 0
   
     for i, part in enumerate(final_composed):
         cprint(part, "green")
         if i > 0:
+            part_integrating_intervals = []
             if isinstance(part[2], tuple):
+                # Entering both measures 
                 for chord_freqs_and_offs in part[2]:
-                    cprint(chord_freqs_and_offs, "yellow")
+                    if isinstance(chord_freqs_and_offs, tuple):
+                        interval = []
+                        if float(chord_freqs_and_offs[1]) < float(part[0]):
+                            interval = [final_composed[i-1][1] - final_composed[i-1][0], final_composed[i-1][1] - final_composed[i-1][0] + part[1] - part[0]]
+                        else:
+                            interval = [0, part[1] - part[0]]
+                    else:
+                        interval = []
+                        if chord_freqs_and_offs == 0:
+                            #No singing case
+                            interval = [0, 0]
+                        else:
+                            pass
+                            interval = [0, part[1] - part[0]]
+                        cprint(chord_freqs_and_offs, "blue")
+                    part_integrating_intervals.append(tuple(interval))
+            else:
+                # No singing in both measures case
+                part_integrating_intervals.append((0, 0))
+
+            cprint(part_integrating_intervals, "cyan", attrs=["bold"])
+        else:
+            pass
+            #i == 0 prima integrala aici
 
     for part in final_composed:
         if isinstance(part[2], tuple):
