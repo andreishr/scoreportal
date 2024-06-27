@@ -58,14 +58,12 @@ for s, p, o in graph:
         else:
             measure_attributes[s].append([p, o])
 
-for s, p, o in graph:
     if s in chord_set and chord_uri_constant not in o:
         if s not in chord_attributes:
             chord_attributes[s] = []
             chord_attributes[s].append([p, o])
         else:
             chord_attributes[s].append([p, o])
-
 
 for elem in measure_attributes:
     chord_tmp_list = []
@@ -81,7 +79,6 @@ for elem in measure_attributes:
             chord_frequencies = [ast.literal_eval(item[1].toPython()) for item in chord_attributes[measure_attribute[1]] if "http://onemusiconto.com/omo#ChordFrequencies" in item[0]][0]
 
             chord_tmp_list.append(Chord(chord_name, chord_duration, chord_pitch_list, chord_note_list, chord_notes, chord_pitches, chord_offset, chord_frequencies))
-
             #Optional mapping to chord list
             chord_object_list.append(Chord(chord_name, chord_duration, chord_pitch_list, chord_note_list, chord_notes, chord_pitches, chord_offset, chord_frequencies))
            
@@ -97,7 +94,6 @@ def get_element_similarity(elements, verbose = 0):
     individuals_tuple_list_integral = []
     checks = set()
     for first_element in elements:
-        print("STEP...")
         for second_element in elements:
             if first_element != second_element and (first_element, second_element) not in checks and (second_element, first_element) not in checks:
                 similarity = get_sim_score(first_element, second_element)
@@ -117,13 +113,9 @@ def get_element_similarity(elements, verbose = 0):
             cprint(similarity_tuple[1].name, 'cyan', attrs=["bold"])
             cprint(similarity_tuple[2], 'green', attrs=["bold"])
 
-        print()
-
     integral_values = [v[2] for v in individuals_tuple_list_integral]
     min_val = 0
     max_val = max(integral_values)
-    print(min_val)
-    print(max_val)
     scaled_list = [(vs[0], vs[1], (vs[2] - min_val) / (max_val - min_val)) for vs in individuals_tuple_list_integral]
 
     values_integral = [v[2] for v in individuals_tuple_list_integral]
@@ -182,7 +174,6 @@ def get_element_similarity(elements, verbose = 0):
     
 
 def get_sim_score(elem1: Measure, elem2: Measure):
-    #Todo aici conditie
     sc =  get_sc_score(elem1.chords, elem2.chords, "list")
     wc = 0.4
     sml = 0
@@ -291,7 +282,6 @@ def h(x, c_list):
 # def diff_f(x, c_list1, c_list2):
 #     return abs(f(x, c_list1) - g(x, c_list2))
 
-
 def get_mes_sim_integral_based(measure_element1, measure_element2):
     integral_score = 0
     integral_score_abs = 0
@@ -325,9 +315,7 @@ def get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs
     sum_integral = 0
     sum_integral_abs = 0
     sum_integral_means = 0
-    cprint(f"Total number of integrals required: {len(final_composed)}", "red", attrs=["bold"])
     for i, part in enumerate(final_composed):
-        cprint(part, "green")
         part_integrating_intervals = []
         if i > 0:
             if isinstance(part[2], tuple):
@@ -345,48 +333,40 @@ def get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs
                             interval = [0, 0]
                         else:
                             interval = [0, part[1] - part[0]]
-                        # cprint(chord_freqs_and_offs, "blue")
                     part_integrating_intervals.append(tuple(interval))
             else:
                 # No singing in both measures case
                 part_integrating_intervals.append((0, 0))
         else:
-            # i == 0 first integral
-            # cprint(part, "red")
             part_integrating_intervals.append((part[0], part[1]))
-            # part_integrating_intervals.append((part[0], part[1]))
-
-        cprint(part_integrating_intervals, "cyan", attrs=["bold"])
+            # Double append for the case where compose dict has something out of index...a better condition can be placed
+            part_integrating_intervals.append((part[0], part[1]))
 
         if isinstance(part[2], tuple):
             if not isinstance(part[2][1], tuple) and not isinstance(part[2][0], tuple):
-                cprint("Single tuple case: Integral should be 0", "yellow")
-                cprint(part_integrating_intervals, "magenta")
                 # This integral should be 0! 
                 i = quad(f, part_integrating_intervals[0][0], part_integrating_intervals[0][1], args=(part[2][1]))
-                cprint(f"Integral value: {0}", "light_blue", attrs=["bold"])
-                print("\n")
+                # cprint(f"Integral value: {0}", "light_blue", attrs=["bold"])
+                # print("\n")
             else:
-                cprint("Double tuple/0 and tuple case:", "yellow")
-                cprint(part_integrating_intervals, "magenta")
+                # cprint("Double tuple/0 and tuple case:", "yellow")
                 i1 = quad(f, part_integrating_intervals[0][0], part_integrating_intervals[0][1], args=(part[2][0][0] if isinstance(part[2][0], tuple) else part[2][0]))
                 i2 = quad(f, part_integrating_intervals[1][0], part_integrating_intervals[1][1], args=(part[2][1][0] if isinstance(part[2][1], tuple) else part[2][1]))
                 i3 = quad(g, part_integrating_intervals[0][0], part_integrating_intervals[0][1], args=(part[2][0][0] if isinstance(part[2][0], tuple) else part[2][0]))
                 i4 = quad(g, part_integrating_intervals[1][0], part_integrating_intervals[1][1], args=(part[2][1][0] if isinstance(part[2][1], tuple) else part[2][1]))
                 i5 = quad(h, part[0], part[1], args=(part[2][0][0] if isinstance(part[2][0], tuple) else part[2][0]))
                 i6 = quad(h, part[0], part[1], args=(part[2][1][0] if isinstance(part[2][1], tuple) else part[2][1]))
-                cprint(f"First chord or 0 integral: {i1}", "light_green")
-                cprint(f"First chord or 0 integral: {i2}", "light_green")
-                cprint(f"Integral subtraction value: {i1[0]-i2[0]}", "light_blue", attrs=["bold"])
-                print("\n")
+                # cprint(f"First chord or 0 integral: {i1}", "light_green")
+                # cprint(f"First chord or 0 integral: {i2}", "light_green")
+                # cprint(f"Integral subtraction value: {i1[0]-i2[0]}", "light_blue", attrs=["bold"])
+                # print("\n")
                 sum_integral+=abs(i1[0] - i2[0])
                 sum_integral_abs+=abs(i3[0] - i4[0])
                 sum_integral_means+=abs(i5[0]-i6[0])
         else:
-            cprint(part_integrating_intervals, "magenta")
-            cprint("0 - not tuple case:", "yellow")
-            cprint(f"Default integral value: {0}", "light_blue", attrs=["bold"])
-
+            pass
+            # cprint("0 - not tuple case:", "yellow")
+            # cprint(f"Default integral value: {0}", "light_blue", attrs=["bold"])
 
     # Initial calculation
     # for part in final_composed:
@@ -397,7 +377,7 @@ def get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs
     #     #    sum_integral += abs(quad(lambda x: f(x, part[2]) - g(x, part[2]), part[0], part[1], limit=50)[0])
     #         sum_integral += quad(diff_f, part[0], part[1], args=(part[2], part[2]), limit=100)[0]
 
-    cprint(sum_integral, "light_red", attrs=["bold"])
+    # cprint(sum_integral, "light_red", attrs=["bold"])
     return sum_integral, sum_integral_abs, sum_integral_means
     
 def compose_dict(list_offsets: list, list_durations: list, list_values: list, max_duration):
@@ -446,4 +426,4 @@ def get_c_values(obj_values, offset, duration):
     return obj_values if float(offset) == 0.0 else 0
 
 
-get_element_similarity(measure_object_list[:20], 1)
+get_element_similarity(measure_object_list[:20], 0)
