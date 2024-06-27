@@ -265,19 +265,6 @@ def jaccard_binary(x,y):
     similarity = intersection.sum() / float(union.sum())
     return similarity
 
-
-"""
-To be implemented a function of frequency:
-f(x)=A*sin(2pi*f*x)
-Assumtions:
-- all amplitudes are the same (use 1)
-- there is no phase shift
-- applied only on measures with the same length
-- if a chord contains a list of frequencies that is not changed spanning multiple times, it was continuously played, 
-    if it has at least one frequency value changed, it is a new chord 
-
-"""
-
 def g(x, c_list):
     sum_of_g = 0
     if isinstance(c_list, list):
