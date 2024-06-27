@@ -15,3 +15,6 @@ onto/chordifier_check.py
 debugs.txt
 modelv3.model
 modelv3emb.emb
+integral.txt
+normal.txt
+similarity_songs2.txt

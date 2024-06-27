@@ -103,8 +103,8 @@ def get_element_similarity(elements, verbose = 0):
                 similarity = get_sim_score(first_element, second_element)
                 if len(first_element.duration) > 0 and len (second_element.duration) > 0:
                     if (first_element.duration[0] == second_element.duration[0]):
-                        similarity_integral, similariy_with_abs = get_mes_sim_integral_based(first_element, second_element)
-                        individuals_tuple_list_integral.append((first_element, second_element, similarity_integral, similariy_with_abs))
+                        similarity_integral, similariy_with_abs, similarity_with_means = get_mes_sim_integral_based(first_element, second_element)
+                        individuals_tuple_list_integral.append((first_element, second_element, similarity_integral, similariy_with_abs, similarity_with_means))
                 individuals_tuple_list.append((first_element, second_element, similarity))
             checks.add((first_element, second_element))
 
@@ -112,34 +112,72 @@ def get_element_similarity(elements, verbose = 0):
     individuals_tuple_list_integral.sort(key=lambda x: x[2])
     
     if verbose != 0:
-        for similarity_tuple in individuals_tuple_list[:5]:
+        for similarity_tuple in individuals_tuple_list[:25]:
             cprint(similarity_tuple[0].name, 'cyan', attrs=["bold"])
             cprint(similarity_tuple[1].name, 'cyan', attrs=["bold"])
             cprint(similarity_tuple[2], 'green', attrs=["bold"])
 
         print()
+
     integral_values = [v[2] for v in individuals_tuple_list_integral]
     min_val = 0
     max_val = max(integral_values)
     print(min_val)
     print(max_val)
     scaled_list = [(vs[0], vs[1], (vs[2] - min_val) / (max_val - min_val)) for vs in individuals_tuple_list_integral]
+
+    values_integral = [v[2] for v in individuals_tuple_list_integral]
+    values_integral_abs = [v[3] for v in individuals_tuple_list_integral]
+    values_integral_means = [v[4] for v in individuals_tuple_list_integral]
+
+
+    #Z-score scaling //if needed
+    mean_integral = np.mean(values_integral)
+    std_dev_integral = np.std(values_integral)
+
+    mean_integral_abs = np.mean(values_integral_abs)
+    std_dev_integral_abs = np.std(values_integral_abs)
+
+    mean_integral_means = np.mean(values_integral_means)
+    std_dev_integral_means = np.std(values_integral_means)
+    integral_scaled_z = [(v[0], v[1], (v[2] - mean_integral) / std_dev_integral) for v in individuals_tuple_list_integral]
+    integral_abs_scaled_z = [(v[0], v[1], (v[3] - mean_integral_abs) / std_dev_integral_abs) for v in individuals_tuple_list_integral]
+    integral_means_scaled_z = [(v[0], v[1], (v[4] - mean_integral_means) / std_dev_integral_means) for v in individuals_tuple_list_integral]
+
+    #Min-Max
+    scaled_list_integral = [(vs[0], vs[1], vs[2] / max(values_integral)) for vs in individuals_tuple_list_integral]
+    scaled_list_abs = [(vs[0], vs[1], vs[3] / max(values_integral_abs)) for vs in individuals_tuple_list_integral]
+    scaled_list_means = [(vs[0], vs[1], vs[4] / max(values_integral_means)) for vs in individuals_tuple_list_integral]
+
+
     if verbose != 0:
-        for similarity_tuple in individuals_tuple_list_integral[:30]:
+        cprint("UNSCALED:", "blue")
+        for similarity_tuple in individuals_tuple_list_integral[:25]:
             cprint(similarity_tuple[0].name, 'yellow', attrs=["bold"])
             cprint(similarity_tuple[1].name, 'yellow', attrs=["bold"])
             cprint(similarity_tuple[2], 'red', attrs=["bold"])
             cprint(f"ABS: {similarity_tuple[3]}", 'light_red', attrs=["bold"])
-        cprint("UNSCALED:", "blue")
-        # for similarity_tuple in scaled_list[:100]:
+            cprint(f"MEANS: {similarity_tuple[4]}", "light_red", attrs=["bold"])
+        # For scaled prints
+        # cprint("DEFAULT:", "blue")
+        # for similarity_tuple in scaled_list_integral[:100]:
+        #     cprint(similarity_tuple[0].name, 'yellow', attrs=["bold"])
+        #     cprint(similarity_tuple[1].name, 'yellow', attrs=["bold"])
+        #     cprint(similarity_tuple[2], 'red', attrs=["bold"])
+        # cprint("ABS:", "blue")
+        # for similarity_tuple in scaled_list_abs[:100]:
+        #     cprint(similarity_tuple[0].name, 'yellow', attrs=["bold"])
+        #     cprint(similarity_tuple[1].name, 'yellow', attrs=["bold"])
+        #     cprint(similarity_tuple[2], 'red', attrs=["bold"])
+        # cprint("MEANS:", "blue")
+        # for similarity_tuple in scaled_list_means[:100]:
         #     cprint(similarity_tuple[0].name, 'yellow', attrs=["bold"])
         #     cprint(similarity_tuple[1].name, 'yellow', attrs=["bold"])
         #     cprint(similarity_tuple[2], 'red', attrs=["bold"])
 
-    # write_to_file("not_scaled", [(similarity_tuple[0].name, similarity_tuple[1].name, similarity_tuple[2]) for similarity_tuple in individuals_tuple_list_integral])
-    # write_to_file("scaled", [(similarity_tuple[0].name, similarity_tuple[1].name, similarity_tuple[2]) for similarity_tuple in scaled_list])
+    write_to_file("normal", [(similarity_tuple[0].name, similarity_tuple[1].name, similarity_tuple[2]) for similarity_tuple in individuals_tuple_list])
+    write_to_file("integral", [(similarity_tuple[0].name, similarity_tuple[1].name, similarity_tuple[2], similarity_tuple[3], similarity_tuple[4]) for similarity_tuple in individuals_tuple_list_integral])
 
-    
     return individuals_tuple_list
     
 
@@ -210,9 +248,11 @@ def get_spd_score(chord_list1, chord_list2):
                 jaccard_vect1.append(1 if in_list1 else 0)
                 jaccard_vect2.append(1 if in_list2 else 0)
 
+                # In case if dictionary is needed
                 # dictionary[value] = [1 if in_list1 else 0, 1 if in_list2 else 0]
 
             checked_values.add(value)
+        # Debug prints
         # cprint(dictionary, "cyan")
         # cprint(jaccard_vect2, "yellow")
         # cprint(jaccard_vect1, "green")
@@ -256,6 +296,11 @@ def f(x, c_list):
         sum_of_f += np.sin(2*math.pi*float(c_list)*x) 
     return sum_of_f
 
+def h(x, c_list):
+    c_list_mean = sum(map(float, c_list)) / len(c_list) if isinstance(c_list, list) else 0;
+    return c_list_mean * x;
+
+
 # def diff_f(x, c_list1, c_list2):
 #     return abs(f(x, c_list1) - g(x, c_list2))
 
@@ -263,6 +308,7 @@ def f(x, c_list):
 def get_mes_sim_integral_based(measure_element1, measure_element2):
     integral_score = 0
     integral_score_abs = 0
+    integral_score_means = 0
     sorted_chords_m1 = sorted(measure_element1.chords, key=lambda x: x.offset)
     sorted_chords_m2 = sorted(measure_element2.chords, key=lambda x: x.offset)
     if len(measure_element1.duration) > 0 and len(measure_element2.duration) > 0:
@@ -281,8 +327,8 @@ def get_mes_sim_integral_based(measure_element1, measure_element2):
                 offsets2.append(float(chordm2.offset[0]))
                 durations2.append(float(chordm2.duration[0]))
                 freqs2.append((chordm2.frequencies, chordm2.offset[0]))
-            integral_score, integral_score_abs = get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs2, float(measure_element1.duration[0]))
-    return integral_score, integral_score_abs
+            integral_score, integral_score_abs, integral_score_means = get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs2, float(measure_element1.duration[0]))
+    return integral_score, integral_score_abs, integral_score_means
 
 def get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs2, m_duration):
     dict1, tup_list1 = compose_dict(offsets1, durations1, freqs1, m_duration)
@@ -291,6 +337,7 @@ def get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs
     final_composed = get_final_list(tup_list1)
     sum_integral = 0
     sum_integral_abs = 0
+    sum_integral_means = 0
     cprint(f"Total number of integrals required: {len(final_composed)}", "red", attrs=["bold"])
     for i, part in enumerate(final_composed):
         cprint(part, "green")
@@ -311,7 +358,6 @@ def get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs
                             interval = [0, 0]
                         else:
                             interval = [0, part[1] - part[0]]
-                        # Debug print to see the nature of chords_and_freqs, it might not be a nested list and for loop will iterate through content
                         # cprint(chord_freqs_and_offs, "blue")
                     part_integrating_intervals.append(tuple(interval))
             else:
@@ -321,8 +367,7 @@ def get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs
             # i == 0 first integral
             # cprint(part, "red")
             part_integrating_intervals.append((part[0], part[1]))
-            # Append twie to avoid index ou of range below - don't want to add another condition...:/
-            part_integrating_intervals.append((part[0], part[1]))
+            # part_integrating_intervals.append((part[0], part[1]))
 
         cprint(part_integrating_intervals, "cyan", attrs=["bold"])
 
@@ -341,19 +386,22 @@ def get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs
                 i2 = quad(f, part_integrating_intervals[1][0], part_integrating_intervals[1][1], args=(part[2][1][0] if isinstance(part[2][1], tuple) else part[2][1]))
                 i3 = quad(g, part_integrating_intervals[0][0], part_integrating_intervals[0][1], args=(part[2][0][0] if isinstance(part[2][0], tuple) else part[2][0]))
                 i4 = quad(g, part_integrating_intervals[1][0], part_integrating_intervals[1][1], args=(part[2][1][0] if isinstance(part[2][1], tuple) else part[2][1]))
+                i5 = quad(h, part[0], part[1], args=(part[2][0][0] if isinstance(part[2][0], tuple) else part[2][0]))
+                i6 = quad(h, part[0], part[1], args=(part[2][1][0] if isinstance(part[2][1], tuple) else part[2][1]))
                 cprint(f"First chord or 0 integral: {i1}", "light_green")
                 cprint(f"First chord or 0 integral: {i2}", "light_green")
                 cprint(f"Integral subtraction value: {i1[0]-i2[0]}", "light_blue", attrs=["bold"])
                 print("\n")
                 sum_integral+=abs(i1[0] - i2[0])
                 sum_integral_abs+=abs(i3[0] - i4[0])
+                sum_integral_means+=abs(i5[0]-i6[0])
         else:
             cprint(part_integrating_intervals, "magenta")
             cprint("0 - not tuple case:", "yellow")
             cprint(f"Default integral value: {0}", "light_blue", attrs=["bold"])
 
 
-
+    # Initial calculation
     # for part in final_composed:
     #     if isinstance(part[2], tuple):
     #         # sum_integral += abs(quad(lambda x: f(x, part[2][0]) - g(x, part[2][1]), part[0], part[1], limit=50)[0])
@@ -363,7 +411,7 @@ def get_integral_score(offsets1, offsets2, durations1, durations2, freqs1, freqs
     #         sum_integral += quad(diff_f, part[0], part[1], args=(part[2], part[2]), limit=100)[0]
 
     cprint(sum_integral, "light_red", attrs=["bold"])
-    return sum_integral, sum_integral_abs
+    return sum_integral, sum_integral_abs, sum_integral_means
     
 def compose_dict(list_offsets: list, list_durations: list, list_values: list, max_duration):
     dict = {}
@@ -411,29 +459,4 @@ def get_c_values(obj_values, offset, duration):
     return obj_values if float(offset) == 0.0 else 0
 
 
-get_element_similarity(measure_object_list[:5], 1)
-
-
-
-
-# cprint(abs(quad(lambda x: f(x, ["1", "2.5"]) - g(x, ["2", "0.666"]), 0, 3, limit=100)[0]), "yellow")
-# cprint(abs(quad(diff_f, 0, 3, args=(["1", "2.5"], ["2", "0.666"]), limit=100)[0]), "red")
-
-
-# cprint(quad(f, 0, 3, args=["1", "2.5"]), "blue")
-# cprint(quad(g, 0, 3, args=["2", "0.666"]), "red")
-# cprint(quad(f, 0, 3, args=["1", "2.5"])[0] - quad(g, 0, 3, args=["2", "0.666"])[0], "green")
-
-# x = smp.symbols('x', real=True)
-# h = smp.sin(2*smp.pi*x) + smp.sin(2*smp.pi*2.5*x)
-# t = smp.sin(2*smp.pi*2*x) + smp.sin(2*smp.pi*0.666*x)
-
-# cprint(smp.integrate(f(x, ["1", "2.5"]), (x, 0, 6)))
-
-# i1 = smp.integrate(h, (x, 0, 3))
-# i2 = smp.integrate(h, (x, 0, 3))
-# i3 = smp.integrate(h-t, (x, 0 ,3))
-# print(i1)
-# print(i2)
-# print(i1-i2)
-# print(i3.evalf())
+get_element_similarity(measure_object_list[:20], 1)
