@@ -287,7 +287,7 @@ def h(x, c_list):
     c_list_mean = sum(map(float, c_list)) / len(c_list) if isinstance(c_list, list) else 0;
     return c_list_mean * x;
 
-
+# Did it for test
 # def diff_f(x, c_list1, c_list2):
 #     return abs(f(x, c_list1) - g(x, c_list2))
 
