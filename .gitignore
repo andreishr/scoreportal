@@ -10,3 +10,11 @@ ontologyv1.ttl
 modelv2.model
 modelv2emb.emb
 similarity_songs.txt
+ontologyv2.ttl
+onto/chordifier_check.py
+debugs.txt
+modelv3.model
+modelv3emb.emb
+integral.txt
+normal.txt
+similarity_songs2.txt
