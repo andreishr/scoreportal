@@ -141,7 +141,6 @@ def get_element_similarity(elements, verbose = 0):
     scaled_list_abs = [(vs[0], vs[1], vs[3] / max(values_integral_abs)) for vs in individuals_tuple_list_integral]
     scaled_list_means = [(vs[0], vs[1], vs[4] / max(values_integral_means)) for vs in individuals_tuple_list_integral]
 
-
     if verbose != 0:
         cprint("UNSCALED:", "blue")
         for similarity_tuple in individuals_tuple_list_integral[:25]:
